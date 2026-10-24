@@ -2,6 +2,7 @@ import { serve } from "@hono/node-server";
 import { createApp } from "./app.ts";
 import { assets, loadAssets } from "./assets.ts";
 import { env } from "./env.ts";
+import { startExitWatcher } from "./exits.ts";
 import { prices, startPricePoller } from "./prices.ts";
 import { TM_API_URL } from "./tm/client.ts";
 import * as gateway from "./tm/gateway.ts";
@@ -12,6 +13,7 @@ await loadAssets();
 startPricePoller([...new Set(assets.all().map((a) => a.symbol))]);
 
 const app = createApp({ gateway, assets, prices });
+startExitWatcher({ gateway, assets, prices });
 
 serve({ fetch: app.fetch, port: env.PORT }, (info) => {
   console.log(`listening on :${info.port} (True Markets at ${TM_API_URL}, org key file ${orgKeyFile})`);

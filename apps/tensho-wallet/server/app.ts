@@ -5,6 +5,7 @@ import type { AssetCatalog } from "./assets.ts";
 import { ApiError, errorResponse } from "./http.ts";
 import type { PriceBook } from "./prices.ts";
 import { authRoutes } from "./routes/auth.ts";
+import { exitRoutes } from "./routes/exits.ts";
 import { marketRoutes } from "./routes/market.ts";
 import { orderRoutes } from "./routes/orders.ts";
 import { transferRoutes } from "./routes/transfers.ts";
@@ -26,6 +27,7 @@ export function createApp(deps: AppDeps) {
     .route("/api", marketRoutes(deps))
     .route("/api", orderRoutes(deps))
     .route("/api", transferRoutes(deps))
+    .route("/api", exitRoutes(deps))
     .all("/api/*", () => {
       throw new ApiError(404, "not_found", "not found");
     });

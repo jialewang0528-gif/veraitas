@@ -15,10 +15,16 @@ const orderBody = z.object({
 
 type OrderBody = z.infer<typeof orderBody>;
 
+// Every order moves real funds and there is no test mode, so buys stay small during the hackathon.
+export const MAX_BUY_USD = 5;
+
 export function orderRoutes({ gateway, assets }: AppDeps) {
   const quotes = new QuoteCache<OrderBody>();
 
   async function prepare(userId: string, { asset_id, side, amount }: OrderBody) {
+    if (side === "buy" && Number(amount) > MAX_BUY_USD) {
+      throw new ApiError(400, "invalid_argument", `amount: buys are capped at $${MAX_BUY_USD}`);
+    }
     const asset = assets.byId(asset_id);
     if (!asset?.chain || assets.isCash(asset)) {
       throw new ApiError(400, "invalid_argument", `asset_id: ${asset_id} is not offered for trading`);

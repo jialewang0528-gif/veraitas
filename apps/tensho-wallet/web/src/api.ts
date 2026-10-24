@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import type { AssetRow, ChartRange, MarketData, Page, Portfolio, Profile, TransactionDetail } from "./types.ts";
+import type { AssetRow, ChartRange, ExitPlan, MarketData, Page, Portfolio, Profile, TransactionDetail } from "./types.ts";
 
 export class ApiError extends Error {
   readonly status: number;
@@ -79,6 +79,15 @@ export function useTransactions() {
   return useQuery({
     queryKey: ["transactions"],
     queryFn: () => api<Page<TransactionDetail>>("/api/transactions"),
+    refetchInterval: 15_000,
+    enabled: useWalletReady(),
+  });
+}
+
+export function useExitPlans() {
+  return useQuery({
+    queryKey: ["exit-plans"],
+    queryFn: () => api<ExitPlan[]>("/api/exit-plans"),
     refetchInterval: 15_000,
     enabled: useWalletReady(),
   });
