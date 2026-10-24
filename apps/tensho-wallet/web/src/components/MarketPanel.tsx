@@ -117,7 +117,7 @@ function PriceChart({
       axisLabelVisible: false,
     });
     api.timeScale().fitContent();
-    return () => api.removeSeries(series);
+    return () => { if (chart.current === api) api.removeSeries(series); };
   }, [points, range]);
 
   return <div ref={container} className="h-[340px] w-full" />;
