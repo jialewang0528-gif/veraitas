@@ -46,11 +46,11 @@ export function BeginnerToggle() {
       role="switch"
       aria-checked={beginner}
       onClick={() => setBeginner(!beginner)}
-      className="flex w-full cursor-pointer items-center justify-between gap-3 rounded-[14px] border border-edge bg-transparent px-4 py-3 text-left text-text transition-colors duration-200 hover:border-faint"
+      className="flex w-full cursor-pointer items-center justify-between gap-3 rounded-[14px] border border-edge bg-transparent px-3.5 py-3 text-left text-text transition-colors duration-200 hover:border-faint"
     >
       <span className="flex flex-col gap-0.5">
-        <span className="text-[11px] font-bold tracking-[0.14em] uppercase">Beginner Mode</span>
-        <span className="text-xs text-muted">{beginner ? "Costs and risks shown" : "Standard view"}</span>
+        <span className="text-[11px] font-bold tracking-[0.1em] whitespace-nowrap uppercase">Beginner Mode</span>
+        <span className="text-xs whitespace-nowrap text-muted">{beginner ? "On: costs shown" : "Off"}</span>
       </span>
       <span
         aria-hidden

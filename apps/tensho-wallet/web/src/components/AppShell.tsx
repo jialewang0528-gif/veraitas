@@ -5,6 +5,7 @@ import { Navigate, NavLink, Outlet, useNavigate } from "react-router";
 import { api, ApiError, useMe } from "../api.ts";
 import { BeginnerToggle } from "../beginner.tsx";
 import type { Profile } from "../types.ts";
+import { TickerTape } from "./TickerTape.tsx";
 import { Banner, Button, Logo, Spinner, Wordmark } from "./ui.tsx";
 
 const NAV: { to: string; label: string; icon: LucideIcon }[] = [
@@ -66,7 +67,7 @@ export function AppShell() {
 
   return (
     <div className="flex h-full min-w-[1100px]">
-      <aside className="flex w-[248px] shrink-0 flex-col gap-8 border-r border-line bg-night px-[18px] py-7">
+      <aside className="flex w-[232px] shrink-0 flex-col gap-7 border-r border-line bg-night px-4 py-6">
         <Logo />
         <nav className="flex flex-col gap-1">
           {NAV.map(({ to, label, icon: Icon }) => (
@@ -75,7 +76,7 @@ export function AppShell() {
               to={to}
               end={to === "/"}
               className={({ isActive }) =>
-                `group relative flex h-11 items-center gap-3 rounded-full px-4 text-[12px] font-bold tracking-[0.14em] uppercase no-underline transition-colors duration-200 ${
+                `group relative flex h-11 items-center gap-3 rounded-full px-4 text-[11px] font-bold tracking-[0.1em] whitespace-nowrap uppercase no-underline transition-colors duration-200 ${
                   isActive ? "bg-line text-text hover:text-text" : "text-muted hover:text-text"
                 }`
               }
@@ -102,8 +103,11 @@ export function AppShell() {
           <CustomerCard email={me.data.email} />
         </div>
       </aside>
-      <main className="flex-1 overflow-y-auto">
-        <div className="page-enter flex min-h-full flex-col gap-7 px-12 py-10">
+      <main className="flex min-w-0 flex-1 flex-col overflow-y-auto">
+        <div className="sticky top-0 z-20">
+          <TickerTape />
+        </div>
+        <div className="page-enter flex flex-1 flex-col gap-5 px-8 py-6">
           <Outlet />
         </div>
       </main>
@@ -203,10 +207,10 @@ export function CredentialsForm({
 export function Page({ title, subtitle, children }: { title: string; subtitle: string; children: ReactNode }) {
   return (
     <>
-      <header className="flex items-end justify-between gap-6 border-b border-line pb-6">
-        <div className="flex flex-col gap-3">
-          <h1 className="m-0 font-display text-[44px] leading-none font-bold tracking-[-0.03em]">{title}</h1>
-          <p className="m-0 text-[15px] text-muted">{subtitle}</p>
+      <header className="flex items-center justify-between gap-6">
+        <div className="flex items-baseline gap-4">
+          <h1 className="m-0 font-display text-[26px] leading-none font-bold tracking-[-0.02em]">{title}</h1>
+          <p className="m-0 text-[13px] text-muted">{subtitle}</p>
         </div>
         <span className="flex h-8 shrink-0 items-center gap-2.5 rounded-full border border-edge px-3.5 text-[10px] font-bold tracking-[0.14em] text-text uppercase">
           <span className="live-dot" />

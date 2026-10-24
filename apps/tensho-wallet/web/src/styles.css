@@ -160,3 +160,28 @@
     animation: none;
   }
 }
+
+/* Ticker tape: the track holds two copies of the list, so moving it by half loops seamlessly. */
+.ticker-track {
+  animation: ticker 60s linear infinite;
+}
+
+.ticker::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(90deg, var(--color-night), transparent 4%, transparent 96%, var(--color-night));
+}
+
+@keyframes ticker {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ticker-track {
+    animation: none;
+  }
+}
