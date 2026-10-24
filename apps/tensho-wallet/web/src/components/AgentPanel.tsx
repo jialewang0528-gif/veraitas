@@ -8,7 +8,13 @@ import {
   Wallet,
   type LucideIcon,
 } from "lucide-react";
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type FormEvent,
+} from "react";
 import { api, ApiError } from "../api.ts";
 import { tokenAmount } from "../format.ts";
 import type { AssetRow, OrderDetail, Quote } from "../types.ts";
@@ -155,22 +161,40 @@ function PreparedTrade({
   );
 }
 
-export function AgentPanel({ tokens }: { tokens: AssetRow[] }) {
-  const [turns, setTurns] = useState<Turn[]>([]);
-  const [draft, setDraft] = useState("");
-  const scroller = useRef<HTMLDivElement>(null);
+// The conversation lives outside React, so a page refresh of the Trade view can't drop an answer in flight.
+interface AgentState {
+  turns: Turn[];
+  pending: boolean;
+  error: Error | null;
+}
 
-  const ask = useMutation({
-    mutationFn: (history: Turn[]) =>
-      api<AgentReply>("/api/agent/chat", {
-        method: "POST",
-        body: {
-          messages: history.map((t) => ({ role: t.role, content: t.content })),
-        },
-      }),
-    onSuccess: (res) =>
-      setTurns((prev) => [
-        ...prev,
+let agentState: AgentState = { turns: [], pending: false, error: null };
+const listeners = new Set<() => void>();
+
+function setAgentState(next: Partial<AgentState>) {
+  agentState = { ...agentState, ...next };
+  listeners.forEach((l) => l());
+}
+
+function subscribe(listener: () => void) {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
+
+async function askAgent(content: string) {
+  if (agentState.pending) return;
+  const history: Turn[] = [...agentState.turns, { role: "user", content }];
+  setAgentState({ turns: history, pending: true, error: null });
+  try {
+    const res = await api<AgentReply>("/api/agent/chat", {
+      method: "POST",
+      body: {
+        messages: history.map((t) => ({ role: t.role, content: t.content })),
+      },
+    });
+    setAgentState({
+      turns: [
+        ...agentState.turns,
         {
           role: "assistant",
           content: res.reply,
@@ -178,23 +202,37 @@ export function AgentPanel({ tokens }: { tokens: AssetRow[] }) {
           sources: res.sources,
           prepared: res.prepared,
         },
-      ]),
-  });
+      ],
+      pending: false,
+    });
+  } catch (err) {
+    setAgentState({
+      pending: false,
+      error: err instanceof Error ? err : new Error(String(err)),
+    });
+  }
+}
+
+export function AgentPanel({ tokens }: { tokens: AssetRow[] }) {
+  const { turns, pending, error } = useSyncExternalStore(
+    subscribe,
+    () => agentState,
+  );
+  const [draft, setDraft] = useState("");
+  const scroller = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     scroller.current?.scrollTo({
       top: scroller.current.scrollHeight,
       behavior: "smooth",
     });
-  }, [turns, ask.isPending]);
+  }, [turns, pending]);
 
   function send(text: string) {
     const content = text.trim();
-    if (!content || ask.isPending) return;
-    const next: Turn[] = [...turns, { role: "user", content }];
-    setTurns(next);
+    if (!content || pending) return;
     setDraft("");
-    ask.mutate(next);
+    void askAgent(content);
   }
 
   function onSubmit(event: FormEvent) {
@@ -202,7 +240,7 @@ export function AgentPanel({ tokens }: { tokens: AssetRow[] }) {
     send(draft);
   }
 
-  const unavailable = ask.error instanceof ApiError && ask.error.status === 503;
+  const unavailable = error instanceof ApiError && error.status === 503;
 
   return (
     <Card className="flex h-[560px] flex-col overflow-hidden">
@@ -223,7 +261,7 @@ export function AgentPanel({ tokens }: { tokens: AssetRow[] }) {
         {turns.length > 0 && (
           <button
             type="button"
-            onClick={() => setTurns([])}
+            onClick={() => setAgentState({ turns: [], error: null })}
             className="cursor-pointer border-none bg-transparent text-[11px] font-bold tracking-[0.12em] text-muted uppercase hover:text-text"
           >
             Clear
@@ -314,15 +352,15 @@ export function AgentPanel({ tokens }: { tokens: AssetRow[] }) {
             </div>
           ),
         )}
-        {ask.isPending && (
+        {pending && (
           <div className="flex items-center gap-2 self-start text-[12px] text-muted">
             <LoaderCircle aria-hidden className="size-3.5 animate-spin" />
             Researching and checking live data
           </div>
         )}
-        {ask.error && (
+        {error && (
           <div role="alert" className="self-start text-[13px] text-down">
-            {unavailable ? "Agent unavailable." : ask.error.message}
+            {unavailable ? "Agent unavailable." : error.message}
           </div>
         )}
       </div>
@@ -340,7 +378,7 @@ export function AgentPanel({ tokens }: { tokens: AssetRow[] }) {
         />
         <button
           type="submit"
-          disabled={!draft.trim() || ask.isPending}
+          disabled={!draft.trim() || pending}
           aria-label="Send"
           className="flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-full border-none bg-text text-ink disabled:cursor-not-allowed disabled:opacity-40"
         >

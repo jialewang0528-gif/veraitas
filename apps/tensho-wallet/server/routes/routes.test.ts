@@ -789,7 +789,7 @@ describe("agent routes", () => {
     const res = await post("/api/agent/chat", { messages: [{ role: "user", content: "Why is SOL down?" }] }, cookie);
 
     const body = (await res.json()) as { sources: { url: string }[] };
-    expect(calls[1]!.plugins).toEqual([{ id: "web", max_results: 5 }]);
+    expect(calls[1]!.plugins).toEqual([{ id: "web", max_results: 4 }]);
     expect(body.sources).toEqual([{ url: "https://example.com/sol", title: "Example" }]);
   });
 
