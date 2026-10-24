@@ -149,7 +149,7 @@ export interface ExitPlan {
   symbol: string;
   qty: string;
   fill_price: string;
-  target_pct: 5 | 10 | 20;
+  target_pct: 5 | 10 | 20 | -5 | -10;
   target_price: string;
   status: ExitStatus;
   buy_order_id: string;

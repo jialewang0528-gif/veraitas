@@ -7,7 +7,7 @@ import { gatewayUserId, requireCustomer, type AppEnv } from "../session.ts";
 
 const planBody = z.object({
   order_id: z.string().min(1),
-  target_pct: z.union([z.literal(5), z.literal(10), z.literal(20)]),
+  target_pct: z.union([z.literal(5), z.literal(10), z.literal(20), z.literal(-5), z.literal(-10)]),
 });
 
 function publicPlan({ customer_id: _customer, user_id: _user, ...plan }: ExitPlan) {

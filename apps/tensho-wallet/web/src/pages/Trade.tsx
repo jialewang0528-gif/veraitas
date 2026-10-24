@@ -1,6 +1,7 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useSearchParams } from "react-router";
-import { isPriceMoved, useAssets, usePortfolio } from "../api.ts";
+import { api, isPriceMoved, useAssets, usePortfolio } from "../api.ts";
+import { Explainable } from "../components/Explain.tsx";
 import { Page } from "../components/AppShell.tsx";
 import { AgentPanel } from "../components/AgentPanel.tsx";
 import { MarketPanel } from "../components/MarketPanel.tsx";
@@ -37,6 +38,15 @@ import type { AssetRow, OrderDetail, PreparedOrder } from "../types.ts";
 type Side = "buy" | "sell";
 
 const ORDER_TERMINAL = ["complete", "failed", "canceled"] as const;
+type AutoSell = 5 | 10 | 20 | -5 | -10 | null;
+const AUTO_SELL: { value: AutoSell; label: string }[] = [
+  { value: null, label: "Off" },
+  { value: 5, label: "+5%" },
+  { value: 10, label: "+10%" },
+  { value: 20, label: "+20%" },
+  { value: -5, label: "Stop −5%" },
+  { value: -10, label: "Stop −10%" },
+];
 const BUY_CHIPS = ["1", "2", "5"];
 const SELL_CHIPS = [25, 50, 75];
 
@@ -144,10 +154,40 @@ function Ticket({
     refresh: true,
   });
   const status = settlement.data?.status;
+  const [autoSell, setAutoSell] = useState<AutoSell>(null);
+  const [autoSellNote, setAutoSellNote] = useState<string>();
+  const planned = useRef<string | null>(null);
+
+  // Once a buy fills, hand the auto-sell choice to the server watcher; the fill itself is read from True Markets.
+  useEffect(() => {
+    const orderId = settlement.data?.order_id;
+    if (
+      status !== "complete" ||
+      side !== "buy" ||
+      autoSell === null ||
+      !orderId ||
+      planned.current === orderId
+    )
+      return;
+    planned.current = orderId;
+    api<{ target_price: string }>("/api/exit-plans", {
+      method: "POST",
+      body: { order_id: orderId, target_pct: autoSell },
+    })
+      .then((plan) =>
+        setAutoSellNote(
+          `Auto-sell set: sells if ${token.symbol} reaches ${usd(plan.target_price)}.`,
+        ),
+      )
+      .catch((err: Error) =>
+        setAutoSellNote(`Auto-sell not set: ${err.message}`),
+      );
+  }, [status, side, autoSell, settlement.data?.order_id, token.symbol]);
 
   function done() {
     reset();
     setAmount("");
+    setAutoSellNote(undefined);
   }
 
   const buy = side === "buy";
@@ -247,6 +287,42 @@ function Ticket({
         </Chip>
       </div>
 
+      {buy && (
+        <div className="flex flex-col gap-2">
+          <Explainable
+            label="Auto-sell"
+            value={
+              autoSell === null
+                ? "Off"
+                : autoSell > 0
+                  ? `Take profit +${autoSell}%`
+                  : `Stop-loss ${autoSell}%`
+            }
+            context="Auto-sell on the buy ticket: take profit sells automatically once the price rises by that much; stop-loss sells automatically once it falls by that much, to limit a loss."
+          >
+            <Label>Auto-sell after buying</Label>
+          </Explainable>
+          <div className="flex flex-wrap gap-1.5">
+            {AUTO_SELL.map(({ value, label }) => (
+              <button
+                key={label}
+                type="button"
+                aria-pressed={autoSell === value}
+                disabled={flow !== null}
+                onClick={() => setAutoSell(value)}
+                className={`h-8 cursor-pointer rounded-full border px-3 text-[11px] font-bold transition-colors duration-200 disabled:cursor-not-allowed disabled:opacity-40 ${
+                  autoSell === value
+                    ? "border-text bg-text text-ink"
+                    : `border-edge bg-transparent hover:border-faint ${value === null ? "text-muted" : value > 0 ? "text-up" : "text-down"}`
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {!guided && (
         <div className="rounded-[14px] border border-edge bg-ink px-4 py-0.5">
           <DetailRow
@@ -303,6 +379,7 @@ function Ticket({
         </Banner>
       )}
 
+      {autoSellNote && <p className="m-0 text-xs text-muted">{autoSellNote}</p>}
       {flow ? (
         <SettlementNotice
           state={flow}

@@ -8,11 +8,11 @@ import { errorMessage } from "./tm/errors.ts";
 import type * as gatewayApi from "./tm/gateway.ts";
 import { stampAll } from "./tm/stamp.ts";
 
-// Exit Ticket: after a buy fills, the customer picks a target. True Markets only rests limit orders on its
-// exchange and Hyperliquid, not on Solana or Base, so this server watches the price and sells at market
-// once the target is reached.
+// Auto-sell: after a buy fills, the customer can pick a take-profit (sell once the price is up 5, 10 or 20%)
+// or a stop-loss (sell once it is down 5 or 10%). True Markets only rests limit orders on its exchange and
+// Hyperliquid, not on Solana or Base, so this server watches the price and sells at market once it is reached.
 
-export const EXIT_TARGETS = [5, 10, 20] as const;
+export const EXIT_TARGETS = [5, 10, 20, -5, -10] as const;
 export type ExitTarget = (typeof EXIT_TARGETS)[number];
 export type ExitStatus = "watching" | "selling" | "sold" | "failed" | "canceled";
 
@@ -59,6 +59,12 @@ function update(plan: ExitPlan, changes: Partial<ExitPlan>): ExitPlan {
 
 export function targetPrice(fillPrice: string, targetPct: ExitTarget): string {
   return String(Number((Number(fillPrice) * (1 + targetPct / 100)).toPrecision(10)));
+}
+
+// Take-profits trigger at or above the target, stop-losses at or below it.
+export function targetReached(plan: Pick<ExitPlan, "target_pct" | "target_price">, price: number): boolean {
+  if (!Number.isFinite(price)) return false;
+  return plan.target_pct > 0 ? price >= Number(plan.target_price) : price <= Number(plan.target_price);
 }
 
 export function plansFor(customerId: string): ExitPlan[] {
@@ -121,7 +127,7 @@ async function sell(plan: ExitPlan, { gateway, assets }: WatcherDeps): Promise<v
 export async function checkPlan(plan: ExitPlan, deps: WatcherDeps): Promise<void> {
   if (plan.status === "watching") {
     const price = Number(deps.prices.get(plan.symbol).price);
-    if (!Number.isFinite(price) || price < Number(plan.target_price)) return;
+    if (!targetReached(plan, price)) return;
     console.log(`exit plan ${plan.id}: ${plan.symbol} at ${price} reached target ${plan.target_price}, selling`);
     // Mark it before any await so an overlapping tick never sells twice.
     update(plan, { status: "selling" });
