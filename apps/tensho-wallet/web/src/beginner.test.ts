@@ -9,7 +9,19 @@ describe("readBeginnerMode", () => {
   });
 
   it("falls back to on when storage is missing or throws", () => {
-    expect(readBeginnerMode(undefined)).toBe(true);
+    const original = Object.getOwnPropertyDescriptor(globalThis, "localStorage");
+    Object.defineProperty(globalThis, "localStorage", {
+      configurable: true,
+      get() {
+        throw new Error("blocked");
+      },
+    });
+    try {
+      expect(readBeginnerMode()).toBe(true);
+    } finally {
+      if (original) Object.defineProperty(globalThis, "localStorage", original);
+      else delete (globalThis as { localStorage?: unknown }).localStorage;
+    }
     expect(
       readBeginnerMode({
         getItem: () => {

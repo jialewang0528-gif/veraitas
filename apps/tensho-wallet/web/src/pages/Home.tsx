@@ -37,10 +37,10 @@ export function Home() {
           <span className="relative">
             <Label>Total balance</Label>
           </span>
-          <Mono className="relative text-[84px] leading-[0.9] font-medium tracking-[-0.04em]">{total === null ? "—" : usd(total)}</Mono>
+          <Mono className="relative min-w-0 text-[clamp(40px,5.5vw,84px)] leading-[0.9] font-medium tracking-[-0.04em]">{total === null ? "—" : usd(total)}</Mono>
           {priced && (
-            <Mono className={`relative text-[15px] ${Number(priced.change_24h_usd) < 0 ? "text-down" : "text-up"}`}>
-              {signedUsd(priced.change_24h_usd)} ({percent(toRatio(priced.change_24h_pct, 100))}) today
+            <Mono className={`relative text-[15px] ${Number(priced.change_24h_usd) < 0 ? "text-down" : Number(priced.change_24h_usd) > 0 ? "text-up" : "text-muted"}`}>
+              {signedUsd(priced.change_24h_usd)} ({percent(toRatio(priced.change_24h_pct, 100))}) 24h
             </Mono>
           )}
         </Card>

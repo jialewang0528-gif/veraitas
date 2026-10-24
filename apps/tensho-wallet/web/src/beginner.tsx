@@ -3,9 +3,10 @@ import { createContext, useContext, useState, type ReactNode } from "react";
 const STORAGE_KEY = "veraitas.beginner-mode";
 
 // Storage can be missing or throw (private windows, blocked site data), so the mode falls back to on.
-export function readBeginnerMode(storage: Pick<Storage, "getItem"> | undefined = globalThis.localStorage): boolean {
+export function readBeginnerMode(storage?: Pick<Storage, "getItem">): boolean {
   try {
-    return storage?.getItem(STORAGE_KEY) !== "off";
+    // Read the global inside the try: in some browsers merely touching localStorage throws.
+    return (storage ?? globalThis.localStorage)?.getItem(STORAGE_KEY) !== "off";
   } catch {
     return true;
   }
@@ -53,11 +54,11 @@ export function BeginnerToggle() {
       </span>
       <span
         aria-hidden
-        className={`relative h-[22px] w-[38px] shrink-0 rounded-full transition-colors duration-200 ${beginner ? "bg-up" : "bg-edge"}`}
+        className={`relative h-[22px] w-[38px] shrink-0 rounded-full transition-colors duration-200 ${beginner ? "bg-text" : "bg-edge"}`}
       >
         <span
-          className={`absolute top-[3px] size-4 rounded-full bg-text transition-transform duration-200 ease-[var(--ease-out)] ${
-            beginner ? "translate-x-[19px]" : "translate-x-[3px]"
+          className={`absolute top-[3px] size-4 rounded-full transition-[transform,background-color] duration-200 ease-[var(--ease-out)] ${
+            beginner ? "translate-x-[19px] bg-ink" : "translate-x-[3px] bg-text"
           }`}
         />
       </span>

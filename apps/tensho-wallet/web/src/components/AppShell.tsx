@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Activity, ArrowLeftRight, House, LogOut, Plus, Receipt, Send, Target, Waves, type LucideIcon } from "lucide-react";
 import type { FormEvent, ReactNode } from "react";
-import { Navigate, NavLink, Outlet, useLocation, useNavigate } from "react-router";
+import { Navigate, NavLink, Outlet, useNavigate } from "react-router";
 import { api, ApiError, useMe } from "../api.ts";
 import { BeginnerToggle } from "../beginner.tsx";
 import type { Profile } from "../types.ts";
@@ -45,7 +45,6 @@ function CustomerCard({ email }: { email: string }) {
 
 export function AppShell() {
   const me = useMe();
-  const location = useLocation();
 
   if (me.error instanceof ApiError && me.error.status === 401) return <Navigate to="/login" replace />;
   if (me.isPending) {
@@ -104,7 +103,7 @@ export function AppShell() {
         </div>
       </aside>
       <main className="flex-1 overflow-y-auto">
-        <div key={location.pathname} className="page-enter flex min-h-full flex-col gap-7 px-12 py-10">
+        <div className="page-enter flex min-h-full flex-col gap-7 px-12 py-10">
           <Outlet />
         </div>
       </main>
