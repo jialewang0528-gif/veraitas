@@ -8,7 +8,7 @@ VerAItas uses the True Markets gateway exactly the way any outside client would.
 
 > [!WARNING]
 > - **One signer key seats every customer's wallet.** VerAItas creates it on first start at `data/wallet-signer-key`. If you delete or lose that file, every wallet it seated is locked for good. Back it up before you fund anything.
-> - **There is no sandbox.** Trades and sends move real funds on Solana mainnet. Buys are capped at $5 on the server.
+> - **There is no sandbox.** Trades and sends move real funds on Solana mainnet.
 > - **Funding means sending tokens to the address the app shows.** There is no card or bank deposit.
 
 ## Requirements

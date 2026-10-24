@@ -2,13 +2,14 @@ import { createContext, useContext, useState, type ReactNode } from "react";
 
 const STORAGE_KEY = "veraitas.beginner-mode";
 
-// Storage can be missing or throw (private windows, blocked site data), so the mode falls back to on.
+// Off by default: the app is a plain trading app until the user turns Beginner Mode on. Storage can be
+// missing or throw (private windows, blocked site data), so the mode then falls back to off.
 export function readBeginnerMode(storage?: Pick<Storage, "getItem">): boolean {
   try {
     // Read the global inside the try: in some browsers merely touching localStorage throws.
-    return (storage ?? globalThis.localStorage)?.getItem(STORAGE_KEY) !== "off";
+    return (storage ?? globalThis.localStorage)?.getItem(STORAGE_KEY) === "on";
   } catch {
-    return true;
+    return false;
   }
 }
 
@@ -21,7 +22,7 @@ function writeBeginnerMode(on: boolean): void {
 }
 
 const BeginnerContext = createContext<{ beginner: boolean; setBeginner: (on: boolean) => void }>({
-  beginner: true,
+  beginner: false,
   setBeginner: () => {},
 });
 

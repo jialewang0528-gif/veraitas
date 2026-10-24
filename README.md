@@ -27,7 +27,6 @@ True Markets rests limit orders on its exchange and on Hyperliquid, but not on S
 
 ## Guardrails
 
-- Every buy is capped at **$5** on the server, whatever the browser sends.
 - The server only signs payloads True Markets returned, never anything from the browser.
 - The API key and the wallet signer key stay on your machine and are never committed.
 

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { isPriceMoved } from "../api.ts";
 import { Page } from "../components/AppShell.tsx";
-import { cents, Chips, DollarInput, MAX_BUY_USD, TokenSelect, twoColumns, useTokenChoice } from "../components/Pickers.tsx";
+import { cents, Chips, DollarInput, TokenSelect, twoColumns, useTokenChoice } from "../components/Pickers.tsx";
 import { Banner, Button, Card, DetailRow, Label, SettlementNotice, Spinner, TextButton } from "../components/ui.tsx";
 import { isPositiveDecimal, tokenAmount, usd } from "../format.ts";
 import { useDebounced, useNow, usePreparedFlow } from "../hooks.ts";
@@ -29,7 +29,6 @@ function QuoteAge({ preparedAt }: { preparedAt: string }) {
 function ReceiptTicket({ token, tokens, onToken }: { token: AssetRow; tokens: AssetRow[]; onToken: (id: string) => void }) {
   const [amount, setAmount] = useState("");
   const settled = useDebounced(amount, 400);
-  const overCap = Number(settled) > MAX_BUY_USD;
   const { quote, settlement, flow, executeError, canConfirm, confirm, reset, retry } = usePreparedFlow<
     "order_id",
     PreparedOrder,
@@ -38,7 +37,7 @@ function ReceiptTicket({ token, tokens, onToken }: { token: AssetRow; tokens: As
     path: "/api/orders",
     idKey: "order_id",
     body: { asset_id: token.asset_id, side: "buy", amount: settled },
-    ready: isPositiveDecimal(settled) && !overCap,
+    ready: isPositiveDecimal(settled),
     terminal: ORDER_TERMINAL,
     success: "complete",
     refresh: true,
@@ -74,7 +73,6 @@ function ReceiptTicket({ token, tokens, onToken }: { token: AssetRow; tokens: As
           disabled={flow !== null}
         />
         <TokenSelect tokens={tokens} value={token.asset_id} onChange={onToken} disabled={flow !== null} />
-        {overCap && <Banner tone="warning">Buys are capped at ${MAX_BUY_USD} for now.</Banner>}
         {quote.error && !executeError && <Banner tone="error">{quote.error.message}</Banner>}
         {executeError && (
           <Banner tone="error" title={isPriceMoved(executeError) ? "Price moved and nothing was bought." : undefined}>

@@ -12,9 +12,6 @@ export const twoColumns = (left: number) => ({ display: "grid", gridTemplateColu
 import type { AssetRow } from "../types.ts";
 import { Label } from "./ui.tsx";
 
-// Matches the server's cap in server/routes/orders.ts.
-export const MAX_BUY_USD = 5;
-
 export function useTokenChoice() {
   const assets = useAssets();
   const [assetId, setAssetId] = useState<string>();

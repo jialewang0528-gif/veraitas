@@ -582,12 +582,11 @@ describe("order routes", () => {
     expect(gateway.createOrder).not.toHaveBeenCalled();
   });
 
-  it("rejects a buy above the $5 cap before reaching True Markets", async () => {
-    const res = await post("/api/orders", { ...ORDER, amount: "5.01" }, cookie);
+  it("prepares a buy of any size; there is no per-trade cap", async () => {
+    const res = await post("/api/orders", { ...ORDER, amount: "250" }, cookie);
 
-    expect(res.status).toBe(400);
-    expect(await res.json()).toMatchObject({ type: "invalid_argument" });
-    expect(gateway.createOrder).not.toHaveBeenCalled();
+    expect(res.status).toBe(200);
+    expect(gateway.createOrder.mock.calls[0]![1]).toMatchObject({ side: "buy", qty: "250", qty_unit: "quote" });
   });
 });
 

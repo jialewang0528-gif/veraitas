@@ -2,13 +2,13 @@ import { describe, expect, it } from "vitest";
 import { readBeginnerMode } from "./beginner.tsx";
 
 describe("readBeginnerMode", () => {
-  it("is on unless the stored value says off", () => {
-    expect(readBeginnerMode({ getItem: () => null })).toBe(true);
+  it("is off unless the stored value says on", () => {
+    expect(readBeginnerMode({ getItem: () => null })).toBe(false);
     expect(readBeginnerMode({ getItem: () => "on" })).toBe(true);
     expect(readBeginnerMode({ getItem: () => "off" })).toBe(false);
   });
 
-  it("falls back to on when storage is missing or throws", () => {
+  it("falls back to off when storage is missing or throws", () => {
     const original = Object.getOwnPropertyDescriptor(globalThis, "localStorage");
     Object.defineProperty(globalThis, "localStorage", {
       configurable: true,
@@ -17,7 +17,7 @@ describe("readBeginnerMode", () => {
       },
     });
     try {
-      expect(readBeginnerMode()).toBe(true);
+      expect(readBeginnerMode()).toBe(false);
     } finally {
       if (original) Object.defineProperty(globalThis, "localStorage", original);
       else delete (globalThis as { localStorage?: unknown }).localStorage;
@@ -28,6 +28,6 @@ describe("readBeginnerMode", () => {
           throw new Error("blocked");
         },
       }),
-    ).toBe(true);
+    ).toBe(false);
   });
 });

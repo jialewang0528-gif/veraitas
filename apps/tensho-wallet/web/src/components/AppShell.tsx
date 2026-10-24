@@ -1,19 +1,19 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Activity, ArrowLeftRight, House, LogOut, Plus, Receipt, Send, Target, Waves, type LucideIcon } from "lucide-react";
+import { Activity, ArrowLeftRight, House, LogOut, Plus, Receipt, Send, Waves, type LucideIcon } from "lucide-react";
 import type { FormEvent, ReactNode } from "react";
 import { Navigate, NavLink, Outlet, useNavigate } from "react-router";
 import { api, ApiError, useMe } from "../api.ts";
-import { BeginnerToggle } from "../beginner.tsx";
+import { BeginnerToggle, useBeginnerMode } from "../beginner.tsx";
 import type { Profile } from "../types.ts";
 import { TickerTape } from "./TickerTape.tsx";
 import { Banner, Button, Logo, Spinner, Wordmark } from "./ui.tsx";
 
-const NAV: { to: string; label: string; icon: LucideIcon }[] = [
+// Beginner screens only show in Beginner Mode; with it off this is a plain trading app.
+const NAV: { to: string; label: string; icon: LucideIcon; beginner?: true }[] = [
   { to: "/", label: "Home", icon: House },
   { to: "/trade", label: "Trade", icon: ArrowLeftRight },
-  { to: "/swing-check", label: "Swing Check", icon: Waves },
-  { to: "/receipt", label: "Receipt First", icon: Receipt },
-  { to: "/exit-ticket", label: "Exit Ticket", icon: Target },
+  { to: "/swing-check", label: "Swing Check", icon: Waves, beginner: true },
+  { to: "/receipt", label: "Receipt First", icon: Receipt, beginner: true },
   { to: "/add-funds", label: "Add funds", icon: Plus },
   { to: "/send", label: "Send", icon: Send },
   { to: "/activity", label: "Activity", icon: Activity },
@@ -46,6 +46,7 @@ function CustomerCard({ email }: { email: string }) {
 
 export function AppShell() {
   const me = useMe();
+  const { beginner } = useBeginnerMode();
 
   if (me.error instanceof ApiError && me.error.status === 401) return <Navigate to="/login" replace />;
   if (me.isPending) {
@@ -70,7 +71,7 @@ export function AppShell() {
       <aside className="flex w-[232px] shrink-0 flex-col gap-7 border-r border-line bg-night px-4 py-6">
         <Logo />
         <nav className="flex flex-col gap-1">
-          {NAV.map(({ to, label, icon: Icon }) => (
+          {NAV.filter((item) => beginner || !item.beginner).map(({ to, label, icon: Icon }) => (
             <NavLink
               key={to}
               to={to}

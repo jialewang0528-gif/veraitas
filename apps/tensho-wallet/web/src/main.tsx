@@ -7,7 +7,6 @@ import { BeginnerModeProvider } from "./beginner.tsx";
 import { AppShell } from "./components/AppShell.tsx";
 import { Activity } from "./pages/Activity.tsx";
 import { AddFunds } from "./pages/AddFunds.tsx";
-import { ExitTicket } from "./pages/ExitTicket.tsx";
 import { Home } from "./pages/Home.tsx";
 import { ReceiptFirst } from "./pages/ReceiptFirst.tsx";
 import { Send } from "./pages/Send.tsx";
@@ -40,7 +39,6 @@ createRoot(document.getElementById("root")!).render(
             <Route path="/trade" element={<Trade />} />
             <Route path="/swing-check" element={<SwingCheck />} />
             <Route path="/receipt" element={<ReceiptFirst />} />
-            <Route path="/exit-ticket" element={<ExitTicket />} />
             <Route path="/add-funds" element={<AddFunds />} />
             <Route path="/send" element={<Send />} />
             <Route path="/activity" element={<Activity />} />
