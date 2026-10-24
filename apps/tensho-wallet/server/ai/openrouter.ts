@@ -2,8 +2,9 @@ import { env } from "../env.ts";
 import { ApiError } from "../http.ts";
 
 const URL = "https://openrouter.ai/api/v1/chat/completions";
-export const AGENT_MODEL = "x-ai/grok-4.7";
-export const FALLBACK_MODEL = "anthropic/claude-sonnet-5.5";
+// Small, fast models keep a researched answer under ~10s; the fallback is from a different provider.
+export const AGENT_MODEL = "anthropic/claude-haiku-5.5";
+export const FALLBACK_MODEL = "deepseek/deepseek-v4.1-flash";
 
 export interface ToolCall {
   id: string;
@@ -22,6 +23,7 @@ export interface ChatRequest {
   tools?: unknown[];
   plugins?: unknown[];
   max_tokens?: number;
+  reasoning?: { enabled: boolean };
 }
 
 export interface ChatResponse {
@@ -49,6 +51,8 @@ export const aiDeps = {
 };
 
 async function once(request: ChatRequest, timeoutMs: number): Promise<ChatResponse> {
+  // Extended thinking spends the token budget before any answer and adds seconds; these calls don't need it.
+  request = { reasoning: { enabled: false }, ...request };
   const key = aiDeps.apiKey();
   if (!key) throw agentUnavailable();
   const res = await aiDeps.fetch(URL, {
@@ -70,7 +74,7 @@ async function once(request: ChatRequest, timeoutMs: number): Promise<ChatRespon
 }
 
 // One retry on the fallback model; anything after that reports the agent as unavailable.
-export async function chat(request: ChatRequest, timeoutMs = 45_000): Promise<ChatResponse> {
+export async function chat(request: ChatRequest, timeoutMs = 20_000): Promise<ChatResponse> {
   if (!aiDeps.apiKey()) throw agentUnavailable();
   try {
     return await once(request, timeoutMs);

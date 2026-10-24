@@ -758,7 +758,7 @@ describe("agent routes", () => {
   it("runs tools the model asks for and returns its answer with the steps", async () => {
     script(toolCall("get_market", { symbol: "sol" }), text("SOL: $150.25."));
 
-    const res = await post("/api/agent/chat", { messages: [{ role: "user", content: "SOL price?" }] }, cookie);
+    const res = await post("/api/agent/chat", { messages: [{ role: "user", content: "What is that coin's price?" }] }, cookie);
 
     expect(res.status).toBe(200);
     const body = (await res.json()) as { reply: string; steps: { tool: string }[] };
@@ -767,6 +767,17 @@ describe("agent routes", () => {
     const toolResult = calls[1]!.messages.at(-1) as unknown as { role: string; content: string };
     expect(toolResult.role).toBe("tool");
     expect(JSON.parse(toolResult.content)).toMatchObject({ symbol: "SOL", price_usd: "150.25" });
+  });
+
+  it("fetches live data for coins the user names before the first model call", async () => {
+    script(text("SOL is down."));
+
+    const res = await post("/api/agent/chat", { messages: [{ role: "user", content: "Why is $SOL down today?" }] }, cookie);
+
+    const body = (await res.json()) as { steps: { tool: string }[] };
+    expect(body.steps.map((s) => s.tool)).toEqual(["get_market"]);
+    expect(calls).toHaveLength(1);
+    expect(JSON.stringify(calls[0]!.messages[0])).toContain("Live True Markets data");
   });
 
   it("searches the web through the web plugin and keeps the cited sources", async () => {
@@ -788,7 +799,7 @@ describe("agent routes", () => {
     const res = await post("/api/agent/chat", { messages: [{ role: "user", content: "Why is SOL down?" }] }, cookie);
 
     const body = (await res.json()) as { sources: { url: string }[] };
-    expect(calls[1]!.plugins).toEqual([{ id: "web", max_results: 4 }]);
+    expect(calls[1]!.plugins).toEqual([{ id: "web", engine: "exa", max_results: 3 }]);
     expect(body.sources).toEqual([{ url: "https://example.com/sol", title: "Example" }]);
   });
 
@@ -820,7 +831,7 @@ describe("agent routes", () => {
     const res = await post("/api/agent/chat", { messages: [{ role: "user", content: "hi" }] }, cookie);
 
     expect(res.status).toBe(200);
-    expect(calls.map((c) => c.model)).toEqual(["x-ai/grok-4.7", "anthropic/claude-sonnet-5.5"]);
+    expect(calls.map((c) => c.model)).toEqual(["anthropic/claude-haiku-5.5", "deepseek/deepseek-v4.1-flash"]);
   });
 
   it("stops after the round limit", async () => {
