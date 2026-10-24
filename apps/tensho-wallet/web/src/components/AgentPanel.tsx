@@ -17,6 +17,7 @@ import {
 } from "react";
 import { api, ApiError } from "../api.ts";
 import { tokenAmount } from "../format.ts";
+import { richText } from "../rich.tsx";
 import type { AssetRow, OrderDetail, Quote } from "../types.ts";
 import { BeforeYouBuy, HoldButton } from "./BeforeYouBuy.tsx";
 import { Card, Label } from "./ui.tsx";
@@ -328,7 +329,7 @@ export function AgentPanel({ tokens }: { tokens: AssetRow[] }) {
                 </ul>
               )}
               <p className="m-0 text-sm leading-relaxed whitespace-pre-wrap">
-                {turn.content}
+                {richText(turn.content)}
               </p>
               {turn.sources.length > 0 && (
                 <div className="flex flex-wrap gap-1.5">

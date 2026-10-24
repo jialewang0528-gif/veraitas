@@ -4,14 +4,19 @@ import {
   CrosshairMode,
   LineStyle,
   createChart,
+  createSeriesMarkers,
   type IChartApi,
+  type MouseEventParams,
   type UTCTimestamp,
 } from "lightweight-charts";
+import { useQuery } from "@tanstack/react-query";
+import { LoaderCircle, Sparkles, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { useMarket } from "../api.ts";
+import { api, useMarket } from "../api.ts";
+import { useBeginnerMode } from "../beginner.tsx";
+import { richText } from "../rich.tsx";
 import { compactUsd, usd } from "../format.ts";
 import type { AssetRow, ChartRange, MarketData } from "../types.ts";
-import { Explainable } from "./Explain.tsx";
 import { AssetTile, Card, Label, Mono, PriceChange, Spinner } from "./ui.tsx";
 
 const RANGES: ChartRange[] = ["1H", "1D", "1W", "1M"];
@@ -28,12 +33,18 @@ const DOWN = "#ff6b6b";
 function PriceChart({
   points,
   range,
+  picked,
+  onPick,
 }: {
   points: MarketData["points"];
   range: ChartRange;
+  picked?: string;
+  onPick?: (at: string) => void;
 }) {
   const container = useRef<HTMLDivElement>(null);
   const chart = useRef<IChartApi | null>(null);
+  const pick = useRef(onPick);
+  pick.current = onPick;
 
   useEffect(() => {
     const el = container.current;
@@ -117,40 +128,122 @@ function PriceChart({
       lineStyle: LineStyle.Dashed,
       axisLabelVisible: false,
     });
+    if (picked) {
+      createSeriesMarkers(series, [
+        {
+          time: (Date.parse(picked) / 1000) as UTCTimestamp,
+          position: "inBar",
+          color: "#ebe8e1",
+          shape: "circle",
+          size: 1.4,
+        },
+      ]);
+    }
     api.timeScale().fitContent();
+    const onClick = (param: MouseEventParams) => {
+      if (typeof param.time === "number")
+        pick.current?.(new Date(param.time * 1000).toISOString());
+    };
+    api.subscribeClick(onClick);
     return () => {
+      api.unsubscribeClick(onClick);
       if (chart.current === api) api.removeSeries(series);
     };
-  }, [points, range]);
+  }, [points, range, picked]);
 
-  return <div ref={container} className="h-[340px] w-full" />;
+  return (
+    <div
+      ref={container}
+      className={`h-[340px] w-full ${onPick ? "cursor-crosshair" : ""}`}
+    />
+  );
 }
 
-function StatItem({
-  label,
-  value,
-  symbol,
-}: {
-  label: string;
-  value: string;
-  symbol: string;
-}) {
+function StatItem({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <Explainable
-        label={label}
-        value={value}
-        context={`${symbol} market stats on the Trade page`}
-      >
-        <Label>{label}</Label>
-      </Explainable>
+      <Label>{label}</Label>
       <Mono className="text-[15px] font-medium">{value}</Mono>
+    </div>
+  );
+}
+
+// Beginner Mode: the agent explains the move at the point the user clicked.
+function MoveExplainer({
+  token,
+  range,
+  at,
+  onClose,
+}: {
+  token: AssetRow;
+  range: ChartRange;
+  at: string;
+  onClose: () => void;
+}) {
+  const move = useQuery({
+    queryKey: ["explain-move", token.asset_id, range, at],
+    queryFn: () =>
+      api<{ text: string; at: string; price: number }>(
+        "/api/agent/explain-move",
+        {
+          method: "POST",
+          body: { asset_id: token.asset_id, range, at },
+        },
+      ),
+    staleTime: 60_000,
+    retry: false,
+  });
+  const when = new Date(move.data?.at ?? at).toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+  return (
+    <div
+      role="status"
+      className="flex flex-col gap-2 rounded-[12px] border border-edge bg-ink p-4"
+    >
+      <div className="flex items-center justify-between">
+        <span className="flex items-center gap-2 text-[11px] font-bold tracking-[0.12em] text-muted uppercase">
+          <Sparkles aria-hidden className="size-3.5" />
+          {token.symbol} at {when}
+          {move.data && (
+            <span className="font-mono tracking-normal normal-case">
+              · {usd(move.data.price)}
+            </span>
+          )}
+        </span>
+        <button
+          type="button"
+          aria-label="Close"
+          onClick={onClose}
+          className="flex cursor-pointer border-none bg-transparent p-0 text-muted hover:text-text"
+        >
+          <X aria-hidden className="size-4" />
+        </button>
+      </div>
+      <p className="m-0 text-[14px] leading-relaxed">
+        {move.isFetching ? (
+          <span className="inline-flex items-center gap-2 text-muted">
+            <LoaderCircle aria-hidden className="size-3.5 animate-spin" />
+            Checking the news around this point
+          </span>
+        ) : move.data ? (
+          richText(move.data.text)
+        ) : (
+          "Explanation unavailable."
+        )}
+      </p>
     </div>
   );
 }
 
 export function MarketPanel({ token }: { token: AssetRow }) {
   const [range, setRange] = useState<ChartRange>("1D");
+  const { beginner } = useBeginnerMode();
+  const [picked, setPicked] = useState<string>();
+  useEffect(() => setPicked(undefined), [range, token.asset_id, beginner]);
   const market = useMarket(token.asset_id, range);
   const points = market.data?.symbol === token.symbol ? market.data.points : [];
   const first = points.length ? Number(points[0]!.price) : null;
@@ -184,26 +277,10 @@ export function MarketPanel({ token }: { token: AssetRow }) {
           </div>
         </div>
         <div className="grid grid-cols-4 gap-7">
-          <StatItem
-            symbol={token.symbol}
-            label="Market cap"
-            value={compactUsd(stats?.market_cap)}
-          />
-          <StatItem
-            symbol={token.symbol}
-            label="24h volume"
-            value={compactUsd(stats?.volume_24h)}
-          />
-          <StatItem
-            symbol={token.symbol}
-            label="24h low"
-            value={usd(stats?.low_24h)}
-          />
-          <StatItem
-            symbol={token.symbol}
-            label="24h high"
-            value={usd(stats?.high_24h)}
-          />
+          <StatItem label="Market cap" value={compactUsd(stats?.market_cap)} />
+          <StatItem label="24h volume" value={compactUsd(stats?.volume_24h)} />
+          <StatItem label="24h low" value={usd(stats?.low_24h)} />
+          <StatItem label="24h high" value={usd(stats?.high_24h)} />
         </div>
       </div>
 
@@ -218,9 +295,23 @@ export function MarketPanel({ token }: { token: AssetRow }) {
             Chart unavailable right now.
           </p>
         ) : (
-          <PriceChart points={points} range={range} />
+          <PriceChart
+            points={points}
+            range={range}
+            picked={beginner ? picked : undefined}
+            onPick={beginner ? setPicked : undefined}
+          />
         )}
       </div>
+
+      {beginner && picked && (
+        <MoveExplainer
+          token={token}
+          range={range}
+          at={picked}
+          onClose={() => setPicked(undefined)}
+        />
+      )}
 
       <div className="flex items-center justify-between">
         <div role="group" aria-label="Chart range" className="flex gap-1.5">
@@ -241,8 +332,17 @@ export function MarketPanel({ token }: { token: AssetRow }) {
           ))}
         </div>
         <span className="flex items-center gap-2 text-[11px] text-faint">
-          <span className="live-dot" />
-          Live from True Markets
+          {beginner ? (
+            <>
+              <Sparkles aria-hidden className="size-3.5" />
+              Click any point on the chart to explain that move
+            </>
+          ) : (
+            <>
+              <span className="live-dot" />
+              Live from True Markets
+            </>
+          )}
         </span>
       </div>
     </Card>

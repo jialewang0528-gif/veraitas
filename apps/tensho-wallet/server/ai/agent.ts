@@ -377,3 +377,6 @@ export async function runAgent(deps: AppDeps, desk: OrderDesk, customer: Custome
 
 export const EXPLAIN_PROMPT =
   "You explain one value from a crypto trading app to a first-time trader. In at most 2 sentences and 40 words: say what the term means in plain words, then what this specific value means for them in practice, with the number (for example: 'If you bought and sold right away, you would get back about $0.01 less'). Do not restate the label. Use only the given value and context. No advice, no emoji.";
+
+export const MOVE_PROMPT =
+  "A beginner clicked one point on a crypto price chart. Using the numbers given and any news you find, explain that move in at most 3 short sentences and 70 words, in plain words a 15-year-old understands (explain any finance term in the same sentence): what the price did around that point, the most likely reason if the news supports one (otherwise say no clear news), and whether it looks like a good sign, a bad sign or unclear for someone holding the coin, and why. Refer to the moment as \"this point\" and do not state clock times or time zones. Never tell them to buy, sell or hold, and never predict prices. Cite a source as [site] if you use one. No emoji.";

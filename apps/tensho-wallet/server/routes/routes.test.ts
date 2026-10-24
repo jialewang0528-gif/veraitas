@@ -865,3 +865,50 @@ describe("agent routes", () => {
     expect(calls).toHaveLength(1);
   });
 });
+
+describe("explain-move route", () => {
+  let cookie: string;
+  let ai: typeof import("../ai/openrouter.ts").aiDeps;
+  let bodies: { messages: { role: string; content: string }[]; plugins?: unknown[] }[];
+
+  beforeEach(async () => {
+    ({ aiDeps: ai } = await import("../ai/openrouter.ts"));
+    ai.apiKey = () => "test-key";
+    bodies = [];
+    ai.fetch = vi.fn(async (_url: string, init?: RequestInit) => {
+      bodies.push(JSON.parse(String(init?.body)));
+      return Response.json({ choices: [{ message: { content: "SOL dipped after a market-wide sell-off. Unclear sign." } }] });
+    });
+    freshApp();
+    ({ cookie } = await signUp());
+    gateway.priceHistory.mockResolvedValue({
+      symbol: "SOL",
+      window: "1d",
+      resolution: "5m",
+      points: [
+        { t: "2026-10-24T10:00:00Z", price: "104" },
+        { t: "2026-10-24T11:00:00Z", price: "100" },
+        { t: "2026-10-24T12:00:00Z", price: "101" },
+      ],
+    });
+  });
+
+  it("explains the clicked point from the real prices around it, once per point", async () => {
+    const body = { asset_id: SOL.id, range: "1D", at: "2026-10-24T11:05:00Z" };
+
+    const res = await post("/api/agent/explain-move", body, cookie);
+    await post("/api/agent/explain-move", body, cookie);
+
+    expect(res.status).toBe(200);
+    expect(await res.json()).toMatchObject({ text: expect.stringContaining("sell-off"), at: "2026-10-24T11:00:00Z", price: 100 });
+    expect(gateway.priceHistory).toHaveBeenCalledWith("SOL", "1d", "5m");
+    expect(bodies).toHaveLength(1);
+    expect(bodies[0]!.plugins).toEqual([{ id: "web", engine: "exa", max_results: 3 }]);
+    expect(bodies[0]!.messages[1]!.content).toContain("Move into this point: -3.85%");
+  });
+
+  it("rejects an unknown range or a bad time", async () => {
+    expect((await post("/api/agent/explain-move", { asset_id: SOL.id, range: "5Y", at: "2026-10-24T11:00:00Z" }, cookie)).status).toBe(400);
+    expect((await post("/api/agent/explain-move", { asset_id: SOL.id, range: "1D", at: "yesterday" }, cookie)).status).toBe(400);
+  });
+});
