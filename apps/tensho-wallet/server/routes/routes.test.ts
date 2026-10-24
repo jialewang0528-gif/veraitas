@@ -101,6 +101,9 @@ function fakeGateway() {
     createOrganizationUser: vi.fn<Gateway["createOrganizationUser"]>(async (ref) => organizationUser(ref)),
     listAssets: vi.fn<Gateway["listAssets"]>(),
     priceHistory: vi.fn<Gateway["priceHistory"]>(),
+    priceRange: vi.fn<Gateway["priceRange"]>(),
+    marketCap: vi.fn<Gateway["marketCap"]>(),
+    volumeHistory: vi.fn<Gateway["volumeHistory"]>(),
     portfolio: vi.fn<Gateway["portfolio"]>(),
     balances: vi.fn<Gateway["balances"]>(),
     createOrder: vi.fn<Gateway["createOrder"]>(async () => preparedOrder("order-1")),
@@ -323,6 +326,66 @@ describe("wallet routes", () => {
     expect(rows[0]).toMatchObject({ price: "150.25", change_24h: "0.0310" });
     expect(rows[1]).toMatchObject({ price: null, change_24h: null });
     expect(rows.filter((r) => r.cash).map((r) => r.symbol)).toEqual(["USDC", "USDC"]);
+  });
+});
+
+describe("market routes", () => {
+  let cookie: string;
+  const points = [
+    { t: "2026-10-24T10:00:00Z", price: "100" },
+    { t: "2026-10-24T11:00:00Z", price: "102" },
+  ];
+
+  beforeEach(async () => {
+    freshApp();
+    ({ cookie } = await signUp());
+    gateway.priceHistory.mockResolvedValue({ symbol: "SOL", window: "7d", resolution: "1h", points });
+    gateway.marketCap.mockResolvedValue({ symbol: "SOL", market_cap: "58000000000" });
+    gateway.volumeHistory.mockResolvedValue({
+      symbol: "SOL",
+      window: "1d",
+      resolution: "1d",
+      points: [
+        { t: "2026-10-23T00:00:00Z", volume: "1" },
+        { t: "2026-10-24T00:00:00Z", volume: "2500000000" },
+      ],
+    });
+    gateway.priceRange.mockResolvedValue({
+      symbol: "SOL",
+      window: "1d",
+      min_price: "98.5",
+      max_price: "104.9",
+      min_timestamp: "2026-10-24T15:30:31Z",
+      max_timestamp: "2026-10-23T16:47:37Z",
+    });
+  });
+
+  it("returns the chart for a range with the 24h stats around it", async () => {
+    const res = await get(`/api/market/${SOL.id}?range=1W`, cookie);
+
+    expect(res.status).toBe(200);
+    expect(gateway.priceHistory).toHaveBeenCalledWith("SOL", "7d", "1h");
+    expect(await res.json()).toEqual({
+      symbol: "SOL",
+      range: "1W",
+      points,
+      stats: { market_cap: "58000000000", volume_24h: "2500000000", low_24h: "98.5", high_24h: "104.9" },
+    });
+  });
+
+  it("still answers with the chart when a stat feed fails", async () => {
+    gateway.marketCap.mockRejectedValueOnce(new TMError(503, { type: "unavailable", message: "down" }));
+
+    const res = await get(`/api/market/${SOL.id}`, cookie);
+
+    expect(res.status).toBe(200);
+    expect(gateway.priceHistory).toHaveBeenCalledWith("SOL", "1d", "5m");
+    expect(((await res.json()) as { stats: { market_cap: string | null } }).stats.market_cap).toBeNull();
+  });
+
+  it("refuses an unknown range and a cash asset", async () => {
+    expect((await get(`/api/market/${SOL.id}?range=5Y`, cookie)).status).toBe(400);
+    expect((await get(`/api/market/${BASE_USDC.id}`, cookie)).status).toBe(400);
   });
 });
 

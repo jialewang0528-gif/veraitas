@@ -122,6 +122,20 @@ export interface TransactionDetail {
   transfer?: TransferDetail;
 }
 
+export type ChartRange = "1H" | "1D" | "1W" | "1M";
+
+export interface MarketData {
+  symbol: string;
+  range: ChartRange;
+  points: { t: string; price: string }[];
+  stats: {
+    market_cap: string | null;
+    volume_24h: string | null;
+    low_24h: string | null;
+    high_24h: string | null;
+  };
+}
+
 export interface Page<T> {
   data: T[];
   pagination: { next_cursor: string | null; limit: number };

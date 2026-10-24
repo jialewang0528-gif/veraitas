@@ -6,13 +6,16 @@ import type {
   CreateOrderResponse,
   CreateTransferRequest,
   ExecuteOrderResponse,
+  MarketCapResponse,
   OrderDetail,
   OrganizationUser,
   Page,
   PortfolioResponse,
   PriceHistoryResponse,
+  PriceRangeResponse,
   TransactionDetail,
   TransferDetail,
+  VolumeHistoryResponse,
 } from "./types.ts";
 
 const GATEWAY = "/v1/gateway";
@@ -28,9 +31,23 @@ export function listAssets(): Promise<Page<AssetItem>> {
   return tmFetch(`${GATEWAY}/assets?venue=defi&limit=100`, { auth: "none" });
 }
 
-export function priceHistory(symbol: string): Promise<PriceHistoryResponse> {
-  const query = new URLSearchParams({ symbol, window: "24h", resolution: "5m" });
+export function priceHistory(symbol: string, window = "24h", resolution = "5m"): Promise<PriceHistoryResponse> {
+  const query = new URLSearchParams({ symbol, window, resolution });
   return tmFetch(`/v1/defi/market/prices/history?${query}`, { auth: "none" });
+}
+
+export function priceRange(symbol: string, window: string): Promise<PriceRangeResponse> {
+  const query = new URLSearchParams({ symbol, window });
+  return tmFetch(`/v1/defi/market/prices/range?${query}`, { auth: "none" });
+}
+
+export function marketCap(symbol: string): Promise<MarketCapResponse> {
+  return tmFetch(`/v1/defi/market/market-data/market-cap?${new URLSearchParams({ symbol })}`, { auth: "none" });
+}
+
+export function volumeHistory(symbol: string, window: string, resolution: string): Promise<VolumeHistoryResponse> {
+  const query = new URLSearchParams({ symbol, window, resolution });
+  return tmFetch(`/v1/defi/market/market-data/volume/history?${query}`, { auth: "none" });
 }
 
 export function portfolio(userId: string): Promise<PortfolioResponse> {

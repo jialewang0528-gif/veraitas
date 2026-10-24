@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { describeTransaction } from "./format.ts";
+import { compactUsd, describeTransaction } from "./format.ts";
 import type { AssetRow, TransactionDetail } from "./types.ts";
 
 const USDC = { symbol: "USDC", chain: "solana", cash: true } as AssetRow;
@@ -56,5 +56,18 @@ describe("describeTransaction", () => {
       detail: "Transfer amount is below minimum transfer size",
       value: null,
     });
+  });
+});
+
+describe("compactUsd", () => {
+  it("shortens large market figures", () => {
+    expect(compactUsd("58667015281")).toBe("$58.67B");
+    expect(compactUsd(2_507_454_057)).toBe("$2.51B");
+    expect(compactUsd("6830000")).toBe("$6.83M");
+  });
+
+  it("shows a dash for missing values", () => {
+    expect(compactUsd(null)).toBe("—");
+    expect(compactUsd("not a number")).toBe("—");
   });
 });

@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import type { AssetRow, Page, Portfolio, Profile, TransactionDetail } from "./types.ts";
+import type { AssetRow, ChartRange, MarketData, Page, Portfolio, Profile, TransactionDetail } from "./types.ts";
 
 export class ApiError extends Error {
   readonly status: number;
@@ -62,6 +62,16 @@ export function useAssets() {
     queryKey: ["assets"],
     queryFn: () => api<AssetRow[]>("/api/assets"),
     refetchInterval: 15_000,
+  });
+}
+
+export function useMarket(assetId: string | undefined, range: ChartRange) {
+  return useQuery({
+    queryKey: ["market", assetId, range],
+    queryFn: () => api<MarketData>(`/api/market/${encodeURIComponent(assetId!)}?range=${range}`),
+    enabled: assetId !== undefined,
+    refetchInterval: range === "1H" ? 15_000 : 60_000,
+    placeholderData: (previous) => previous,
   });
 }
 

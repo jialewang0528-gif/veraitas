@@ -2,6 +2,7 @@ import { useState, type ReactNode } from "react";
 import { useSearchParams } from "react-router";
 import { isPriceMoved, useAssets, usePortfolio } from "../api.ts";
 import { Page } from "../components/AppShell.tsx";
+import { MarketPanel } from "../components/MarketPanel.tsx";
 import {
   AssetTile,
   Banner,
@@ -16,7 +17,17 @@ import {
   Stat,
   TextButton,
 } from "../components/ui.tsx";
-import { chainName, fractionOf, holdings, isPositiveDecimal, sanitizeDecimal, tokenAmount, toRatio, usd, type Holding } from "../format.ts";
+import {
+  chainName,
+  fractionOf,
+  holdings,
+  isPositiveDecimal,
+  sanitizeDecimal,
+  tokenAmount,
+  toRatio,
+  usd,
+  type Holding,
+} from "../format.ts";
 import { useDebounced, useNow, usePreparedFlow } from "../hooks.ts";
 import type { AssetRow, OrderDetail, PreparedOrder } from "../types.ts";
 
@@ -26,37 +37,56 @@ const ORDER_TERMINAL = ["complete", "failed", "canceled"] as const;
 const BUY_CHIPS = ["10", "25", "50"];
 const SELL_CHIPS = [25, 50, 75];
 
-function TokenList({ tokens, selected, onSelect }: { tokens: AssetRow[]; selected?: string; onSelect: (assetId: string) => void }) {
+function TokenList({
+  tokens,
+  selected,
+  onSelect,
+}: {
+  tokens: AssetRow[];
+  selected?: string;
+  onSelect: (assetId: string) => void;
+}) {
   return (
-    <Card className="flex max-h-[720px] flex-col gap-1.5 overflow-y-auto p-[18px]">
-      <h2 className="m-0 mb-3 ml-1.5 font-display text-[18px] leading-none font-bold">Tokens</h2>
-      {tokens.map((token) => {
-        const active = token.asset_id === selected;
-        return (
-          <button
-            key={token.asset_id}
-            type="button"
-            aria-pressed={active}
-            onClick={() => onSelect(token.asset_id)}
-            className={`group flex cursor-pointer items-center gap-3 rounded-[14px] border p-3 text-left text-text transition-colors duration-200 ${
-              active ? "border-accent bg-line" : "border-transparent bg-transparent hover:bg-line/60"
-            }`}
-          >
-            <AssetTile symbol={token.symbol} icon={token.icon} />
-            <span className="flex flex-1 flex-col gap-0.5">
-              <span className="text-[15px] font-bold">{token.name}</span>
-              <span className="text-[13px] text-muted">
-                {token.symbol} · {chainName(token.chain)}
+    <Card className="flex flex-col p-[18px]">
+      <h2 className="m-0 mb-3 ml-1.5 font-display text-[18px] leading-none font-bold">
+        Tokens
+      </h2>
+      <div className="grid grid-cols-2 gap-1.5">
+        {tokens.map((token) => {
+          const active = token.asset_id === selected;
+          return (
+            <button
+              key={token.asset_id}
+              type="button"
+              aria-pressed={active}
+              onClick={() => onSelect(token.asset_id)}
+              className={`group flex cursor-pointer items-center gap-3 rounded-[14px] border p-3 text-left text-text transition-colors duration-200 ${
+                active
+                  ? "border-accent bg-line"
+                  : "border-transparent bg-transparent hover:bg-line/60"
+              }`}
+            >
+              <AssetTile symbol={token.symbol} icon={token.icon} />
+              <span className="flex flex-1 flex-col gap-0.5">
+                <span className="text-[15px] font-bold">{token.name}</span>
+                <span className="text-[13px] text-muted">
+                  {token.symbol} · {chainName(token.chain)}
+                </span>
               </span>
-            </span>
-            <span className="flex flex-col items-end gap-0.5">
-              <Mono className="text-sm">{usd(token.price)}</Mono>
-              <PriceChange ratio={toRatio(token.change_24h)} className="text-xs" />
-            </span>
-          </button>
-        );
-      })}
-      <p className="mx-1.5 mt-2 mb-0 text-[13px] text-faint">Tokens on Solana and Base. Your cash is held as USDC on each network.</p>
+              <span className="flex flex-col items-end gap-0.5">
+                <Mono className="text-sm">{usd(token.price)}</Mono>
+                <PriceChange
+                  ratio={toRatio(token.change_24h)}
+                  className="text-xs"
+                />
+              </span>
+            </button>
+          );
+        })}
+      </div>
+      <p className="mx-1.5 mt-2 mb-0 text-[13px] text-faint">
+        Tokens on Solana and Base. Your cash is held as USDC on each network.
+      </p>
     </Card>
   );
 }
@@ -69,7 +99,12 @@ function quoteHint(fetching: boolean, failed: boolean): string {
 
 function QuoteAge({ preparedAt }: { preparedAt: string }) {
   const now = useNow(1000);
-  return <>Updated {Math.max(0, Math.round((now - Date.parse(preparedAt)) / 1000))}s ago · refreshes every 10s</>;
+  return (
+    <>
+      Updated {Math.max(0, Math.round((now - Date.parse(preparedAt)) / 1000))}s
+      ago · refreshes every 10s
+    </>
+  );
 }
 
 function Ticket({
@@ -87,7 +122,16 @@ function Ticket({
 }) {
   const [amount, setAmount] = useState("");
   const settled = useDebounced(amount, 400);
-  const { quote, settlement, flow, executeError, canConfirm, confirm, reset, retry } = usePreparedFlow<"order_id", PreparedOrder, OrderDetail>({
+  const {
+    quote,
+    settlement,
+    flow,
+    executeError,
+    canConfirm,
+    confirm,
+    reset,
+    retry,
+  } = usePreparedFlow<"order_id", PreparedOrder, OrderDetail>({
     path: "/api/orders",
     idKey: "order_id",
     body: { asset_id: token.asset_id, side, amount: settled },
@@ -107,7 +151,12 @@ function Ticket({
   const available = buy ? cash?.available : position?.available;
   const decimals = buy ? 2 : (position?.decimals ?? 6);
   const q = quote.data?.quote;
-  const priceEach = q && Number(q.qty_out) > 0 ? (buy ? Number(settled) / Number(q.qty_out) : Number(q.qty_out) / Number(settled)) : null;
+  const priceEach =
+    q && Number(q.qty_out) > 0
+      ? buy
+        ? Number(settled) / Number(q.qty_out)
+        : Number(q.qty_out) / Number(settled)
+      : null;
 
   return (
     <Card className="flex flex-col gap-[18px] p-6">
@@ -120,7 +169,9 @@ function Ticket({
             disabled={flow !== null}
             onClick={() => onSide(s)}
             className={`h-[42px] cursor-pointer rounded-[10px] border-none text-[15px] font-bold capitalize ${
-              side === s ? "bg-accent text-ink" : "bg-transparent text-muted hover:text-text"
+              side === s
+                ? "bg-accent text-ink"
+                : "bg-transparent text-muted hover:text-text"
             }`}
           >
             {s} {token.symbol}
@@ -137,33 +188,55 @@ function Ticket({
             inputMode="decimal"
             placeholder="0"
             disabled={flow !== null}
-            aria-label={buy ? "Amount in US dollars" : `Amount of ${token.symbol}`}
+            aria-label={
+              buy ? "Amount in US dollars" : `Amount of ${token.symbol}`
+            }
             onChange={(e) => setAmount(sanitizeDecimal(e.target.value))}
             className="w-[5.5ch] border-none bg-transparent text-center font-mono text-text outline-none placeholder:text-edge"
           />
           {!buy && <span className="text-2xl text-muted">{token.symbol}</span>}
         </span>
         <span className="text-sm text-muted">
-          {available === undefined ? "—" : buy ? `${usd(available)} cash available` : `${tokenAmount(available, token.symbol)} available`}
+          {available === undefined
+            ? "—"
+            : buy
+              ? `${usd(available)} cash available`
+              : `${tokenAmount(available, token.symbol)} available`}
         </span>
       </label>
 
       <div className="grid grid-cols-4 gap-2">
         {buy
           ? BUY_CHIPS.map((chip) => (
-              <Chip key={chip} active={amount === chip} disabled={flow !== null} onClick={() => setAmount(chip)}>
+              <Chip
+                key={chip}
+                active={amount === chip}
+                disabled={flow !== null}
+                onClick={() => setAmount(chip)}
+              >
                 ${chip}
               </Chip>
             ))
           : SELL_CHIPS.map((pct) => {
-              const value = available ? fractionOf(available, pct, decimals) : "";
+              const value = available
+                ? fractionOf(available, pct, decimals)
+                : "";
               return (
-                <Chip key={pct} active={!!value && amount === value} disabled={!available || flow !== null} onClick={() => setAmount(value)}>
+                <Chip
+                  key={pct}
+                  active={!!value && amount === value}
+                  disabled={!available || flow !== null}
+                  onClick={() => setAmount(value)}
+                >
                   {pct}%
                 </Chip>
               );
             })}
-        <Chip active={!!available && amount === available} disabled={!available || flow !== null} onClick={() => setAmount(available ?? "")}>
+        <Chip
+          active={!!available && amount === available}
+          disabled={!available || flow !== null}
+          onClick={() => setAmount(available ?? "")}
+        >
           Max
         </Chip>
       </div>
@@ -171,21 +244,54 @@ function Ticket({
       <div className="rounded-[14px] border border-edge bg-ink px-4 py-0.5">
         <DetailRow
           label="You get (est.)"
-          value={q ? (buy ? tokenAmount(q.qty_out, token.symbol) : `${usd(q.qty_out)} USDC`) : "—"}
+          value={
+            q
+              ? buy
+                ? tokenAmount(q.qty_out, token.symbol)
+                : `${usd(q.qty_out)} USDC`
+              : "—"
+          }
         />
-        <DetailRow label="Price" value={priceEach === null ? "—" : `${usd(priceEach)} / ${token.symbol}`} />
+        <DetailRow
+          label="Price"
+          value={
+            priceEach === null ? "—" : `${usd(priceEach)} / ${token.symbol}`
+          }
+        />
         <DetailRow label="Network fee" value="Covered by VerAItas" />
-        {q && Number(q.fee) > 0 && <DetailRow label="Fee" value={`${tokenAmount(q.fee)} ${q.fee_asset}`} />}
+        {q && Number(q.fee) > 0 && (
+          <DetailRow
+            label="Fee"
+            value={`${tokenAmount(q.fee)} ${q.fee_asset}`}
+          />
+        )}
         <p className="m-0 py-2.5 text-xs text-faint">
-          {quote.data ? <QuoteAge preparedAt={quote.data.prepared_at} /> : quoteHint(quote.isFetching, quote.isError)}
+          {quote.data ? (
+            <QuoteAge preparedAt={quote.data.prepared_at} />
+          ) : (
+            quoteHint(quote.isFetching, quote.isError)
+          )}
         </p>
       </div>
 
-      {quote.error && !executeError && <Banner tone="error">{quote.error.message}</Banner>}
+      {quote.error && !executeError && (
+        <Banner tone="error">{quote.error.message}</Banner>
+      )}
       {executeError && (
-        <Banner tone="error" title={isPriceMoved(executeError) ? "Price moved and nothing was traded." : undefined}>
-          {isPriceMoved(executeError) ? "Review the quote again." : executeError.message}{" "}
-          <TextButton onClick={retry}>{isPriceMoved(executeError) ? "Review again" : "Try again"}</TextButton>
+        <Banner
+          tone="error"
+          title={
+            isPriceMoved(executeError)
+              ? "Price moved and nothing was traded."
+              : undefined
+          }
+        >
+          {isPriceMoved(executeError)
+            ? "Review the quote again."
+            : executeError.message}{" "}
+          <TextButton onClick={retry}>
+            {isPriceMoved(executeError) ? "Review again" : "Try again"}
+          </TextButton>
         </Banner>
       )}
 
@@ -197,7 +303,11 @@ function Ticket({
               ? `Bought ${tokenAmount(settlement.data?.executed_qty ?? "0", token.symbol)}.`
               : `Sold ${tokenAmount(settlement.data?.executed_qty ?? settled, token.symbol)}.`
           }
-          failure={status === "canceled" ? "The order was canceled. Nothing moved." : settlement.data?.failure_reason}
+          failure={
+            status === "canceled"
+              ? "The order was canceled. Nothing moved."
+              : settlement.data?.failure_reason
+          }
           explorerUrl={settlement.data?.explorer_url}
           onDone={done}
         />
@@ -214,7 +324,17 @@ function Ticket({
   );
 }
 
-function Chip({ active, disabled, onClick, children }: { active: boolean; disabled?: boolean; onClick: () => void; children: ReactNode }) {
+function Chip({
+  active,
+  disabled,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  disabled?: boolean;
+  onClick: () => void;
+  children: ReactNode;
+}) {
   return (
     <button
       type="button"
@@ -236,13 +356,19 @@ export function Trade() {
 
   const tokens = assets.data?.filter((a) => !a.cash) ?? [];
   const side: Side = params.get("side") === "sell" ? "sell" : "buy";
-  const token = tokens.find((t) => t.asset_id === params.get("asset")) ?? tokens[0];
+  const token =
+    tokens.find((t) => t.asset_id === params.get("asset")) ?? tokens[0];
   const rows = holdings(portfolio.data, assets.data);
-  const position = rows.find((h) => h.symbol === token?.symbol && h.chain === token.chain);
+  const position = rows.find(
+    (h) => h.symbol === token?.symbol && h.chain === token.chain,
+  );
   const cash = rows.find((h) => h.cash && h.chain === token?.chain);
 
   function select(next: { asset?: string; side?: Side }) {
-    setParams({ asset: next.asset ?? token?.asset_id ?? "", side: next.side ?? side }, { replace: true });
+    setParams(
+      { asset: next.asset ?? token?.asset_id ?? "", side: next.side ?? side },
+      { replace: true },
+    );
   }
 
   return (
@@ -251,31 +377,43 @@ export function Trade() {
       {!token ? (
         <Spinner />
       ) : (
-        <div className="grid flex-1 grid-cols-[1fr_1.25fr_0.9fr] items-start gap-5">
-          <TokenList tokens={tokens} selected={token.symbol} onSelect={(asset) => select({ asset })} />
-          <Ticket
-            key={`${token.asset_id}:${side}`}
-            token={token}
-            side={side}
-            onSide={(s) => select({ side: s })}
-            position={position}
-            cash={cash}
-          />
-          <Card className="flex flex-col gap-4 p-[22px]">
-            <h2 className="m-0 font-display text-[18px] leading-none font-bold">Your {token.symbol}</h2>
-            <Stat
-              label="Balance"
-              value={tokenAmount(position?.total ?? "0", token.symbol)}
-              detail={usd(position?.value ?? (position ? null : 0))}
+        <div className="grid flex-1 grid-cols-[minmax(0,1fr)_380px] items-start gap-5">
+          <div className="flex min-w-0 flex-col gap-5">
+            <MarketPanel token={token} />
+            <TokenList
+              tokens={tokens}
+              selected={token.symbol}
+              onSelect={(asset) => select({ asset })}
             />
-            <div className="flex flex-col gap-1">
-              <Label>Cash available</Label>
-              <Mono className="text-[22px]">{usd(cash?.available ?? 0)}</Mono>
-            </div>
-            <p className="m-0 mt-6 text-[13px] leading-relaxed text-faint">
-              Prices move between quote and fill. If a trade can't land within your slippage, it's cancelled and nothing moves.
-            </p>
-          </Card>
+          </div>
+          <div className="flex flex-col gap-5">
+            <Ticket
+              key={`${token.asset_id}:${side}`}
+              token={token}
+              side={side}
+              onSide={(s) => select({ side: s })}
+              position={position}
+              cash={cash}
+            />
+            <Card className="flex flex-col gap-4 p-[22px]">
+              <h2 className="m-0 font-display text-[18px] leading-none font-bold">
+                Your {token.symbol}
+              </h2>
+              <Stat
+                label="Balance"
+                value={tokenAmount(position?.total ?? "0", token.symbol)}
+                detail={usd(position?.value ?? (position ? null : 0))}
+              />
+              <div className="flex flex-col gap-1">
+                <Label>Cash available</Label>
+                <Mono className="text-[22px]">{usd(cash?.available ?? 0)}</Mono>
+              </div>
+              <p className="m-0 mt-6 text-[13px] leading-relaxed text-faint">
+                Prices move between quote and fill. If a trade can't land within
+                your slippage, it's cancelled and nothing moves.
+              </p>
+            </Card>
+          </div>
         </div>
       )}
     </Page>

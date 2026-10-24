@@ -23,6 +23,14 @@ export function usd(value: number | string | null | undefined): string {
   });
 }
 
+// Market cap and volume read as $58.67B rather than a twelve-digit figure.
+export function compactUsd(value: number | string | null | undefined): string {
+  if (value === null || value === undefined || value === "") return "—";
+  const n = Number(value);
+  if (!Number.isFinite(n)) return "—";
+  return n.toLocaleString("en-US", { style: "currency", currency: "USD", notation: "compact", maximumFractionDigits: 2 });
+}
+
 export function signedUsd(value: number | string): string {
   const n = Number(value);
   return `${n > 0 ? "+" : n < 0 ? "−" : ""}${usd(Math.abs(n))}`;

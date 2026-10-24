@@ -41,6 +41,27 @@ export interface PriceHistoryResponse {
   points: PricePoint[];
 }
 
+export interface PriceRangeResponse {
+  symbol: string;
+  window: string;
+  min_price: string;
+  max_price: string;
+  min_timestamp: string;
+  max_timestamp: string;
+}
+
+export interface MarketCapResponse {
+  symbol: string;
+  market_cap: string;
+}
+
+export interface VolumeHistoryResponse {
+  symbol: string;
+  window: string;
+  resolution: string;
+  points: { t: string; volume: string }[];
+}
+
 export interface BalanceItem {
   asset_id?: string;
   symbol: string;
