@@ -53,12 +53,12 @@ function PriceChart({
       autoSize: true,
       layout: {
         background: { type: ColorType.Solid, color: "transparent" },
-        textColor: "#6c7182",
+        textColor: "#707070",
         fontFamily: "Inter, system-ui, sans-serif",
         fontSize: 11,
         attributionLogo: false,
       },
-      grid: { vertLines: { visible: false }, horzLines: { color: "#11141d" } },
+      grid: { vertLines: { visible: false }, horzLines: { color: "#161616" } },
       rightPriceScale: {
         borderVisible: false,
         scaleMargins: { top: 0.12, bottom: 0.08 },
@@ -67,14 +67,14 @@ function PriceChart({
       crosshair: {
         mode: CrosshairMode.Magnet,
         vertLine: {
-          color: "#4a4c5c",
+          color: "#4a4a4a",
           style: LineStyle.Dashed,
-          labelBackgroundColor: "#1f2433",
+          labelBackgroundColor: "#262626",
         },
         horzLine: {
-          color: "#4a4c5c",
+          color: "#4a4a4a",
           style: LineStyle.Dashed,
-          labelBackgroundColor: "#1f2433",
+          labelBackgroundColor: "#262626",
         },
       },
       handleScale: false,
@@ -107,7 +107,7 @@ function PriceChart({
       priceLineColor: color,
       priceLineStyle: LineStyle.Dotted,
       crosshairMarkerBorderColor: color,
-      crosshairMarkerBackgroundColor: "#05060a",
+      crosshairMarkerBackgroundColor: "#0a0a0a",
       priceFormat: {
         type: "custom",
         formatter: (price: number) => usd(price),
@@ -123,7 +123,7 @@ function PriceChart({
     // Where the range opened, so "up or down since then" reads at a glance.
     series.createPriceLine({
       price: first,
-      color: "#4a4c5c",
+      color: "#4a4a4a",
       lineWidth: 1,
       lineStyle: LineStyle.Dashed,
       axisLabelVisible: false,

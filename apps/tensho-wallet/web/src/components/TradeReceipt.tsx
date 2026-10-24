@@ -86,7 +86,7 @@ export function TradeReceipt({
           <button
             type="button"
             onClick={onClose}
-            className="h-10 cursor-pointer rounded-full border border-accent bg-accent px-5 text-[12px] font-bold tracking-[0.12em] text-white uppercase hover:bg-accent-strong"
+            className="h-10 cursor-pointer rounded-full border border-accent bg-accent px-5 text-[12px] font-bold tracking-[0.12em] text-ink uppercase hover:bg-accent-strong"
           >
             Done
           </button>

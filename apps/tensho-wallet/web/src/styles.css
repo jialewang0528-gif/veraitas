@@ -1,19 +1,19 @@
 @import "tailwindcss";
 
-/* Trading-terminal palette: a cool near-black base with 8% white hairlines (after True Markets), one electric
-   blue accent that is solid only on the main action and a tint everywhere else, and mint and rose for gains and
-   losses, also used as tints on buy and sell controls. Other hues carry information only. */
+/* Black and white: neutral blacks and greys with 8% white hairlines, white for the main action and white tints
+   for selected states. Mint and rose carry gains and losses (also as tints on buy and sell controls); other
+   hues carry information only. */
 @theme {
-  --color-ink: #05060a;
-  --color-night: #030407;
-  --color-panel: #0c0e15;
-  --color-edge: #1f2433;
-  --color-line: #151926;
-  --color-text: #f5f6f8;
-  --color-muted: #8e929f;
-  --color-faint: #6c7182;
-  --color-accent: #5b7cff;
-  --color-accent-strong: #4a6af0;
+  --color-ink: #0a0a0a;
+  --color-night: #060606;
+  --color-panel: #111111;
+  --color-edge: #262626;
+  --color-line: #1a1a1a;
+  --color-text: #f5f5f5;
+  --color-muted: #9a9a9a;
+  --color-faint: #707070;
+  --color-accent: #f5f5f5;
+  --color-accent-strong: #ffffff;
   --color-cyan: #45e3ff;
   --color-pink: #ff4fa3;
   --color-up: #3fcf85;
@@ -50,8 +50,8 @@
   }
 
   ::selection {
-    background: var(--color-accent);
-    color: #fff;
+    background: var(--color-text);
+    color: var(--color-ink);
   }
 
   a {
@@ -111,7 +111,7 @@
     position: absolute;
     inset: 0;
     pointer-events: none;
-    background: linear-gradient(105deg, transparent 35%, rgb(91 124 255 / 0.08) 50%, transparent 65%);
+    background: linear-gradient(105deg, transparent 35%, rgb(255 255 255 / 0.05) 50%, transparent 65%);
     background-size: 250% 100%;
     animation: sheen 7s var(--ease-inout) infinite;
   }

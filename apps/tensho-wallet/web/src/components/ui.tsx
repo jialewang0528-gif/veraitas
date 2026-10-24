@@ -10,7 +10,7 @@ const BUTTON_BASE =
 
 // Primary is an ink fill that empties on hover; secondary is an outline that fills. Same move as the portfolio.
 const BUTTON_VARIANT: Record<Variant, string> = {
-  primary: "border-accent bg-accent text-white hover:border-accent-strong hover:bg-accent-strong",
+  primary: "border-accent bg-accent text-ink hover:border-accent-strong hover:bg-accent-strong",
   secondary: "border-edge bg-white/[0.03] text-text hover:border-accent/60 hover:bg-accent/10",
 };
 
@@ -216,7 +216,7 @@ export function Wordmark({ className = "", animate = false }: { className?: stri
   return (
     <span role="img" aria-label="VerAItas" className={`font-display leading-none tracking-[-0.03em] ${animate ? "wordmark-in" : ""} ${className}`}>
       {parts.map(([text, heavy], i) => (
-        <span key={text} aria-hidden className={heavy ? "font-extrabold text-accent" : "font-medium text-text"} style={animate ? { animationDelay: `${i * 120}ms` } : undefined}>
+        <span key={text} aria-hidden className={heavy ? "font-extrabold text-text" : "font-medium text-muted"} style={animate ? { animationDelay: `${i * 120}ms` } : undefined}>
           {text}
         </span>
       ))}

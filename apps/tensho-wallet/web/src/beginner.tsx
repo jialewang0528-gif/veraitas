@@ -59,7 +59,7 @@ export function BeginnerToggle() {
       >
         <span
           className={`absolute top-[3px] size-4 rounded-full transition-[transform,background-color] duration-200 ease-[var(--ease-out)] ${
-            beginner ? "translate-x-[19px] bg-white" : "translate-x-[3px] bg-muted"
+            beginner ? "translate-x-[19px] bg-ink" : "translate-x-[3px] bg-muted"
           }`}
         />
       </span>
