@@ -658,3 +658,41 @@ describe("transfer routes", () => {
     expect(verifiesStamp(signatures[0]!, "transfer-2-payload-1")).toBe(true);
   });
 });
+
+describe("exit quote route", () => {
+  let cookie: string;
+
+  beforeEach(async () => {
+    freshApp();
+    ({ cookie } = await signUp());
+  });
+
+  it("prices selling the quantity back without preparing anything to sign", async () => {
+    gateway.createOrder.mockResolvedValueOnce({
+      order_id: "",
+      status: "",
+      quote: {
+        base_asset: SOL.address!,
+        quote_asset: USDC.address!,
+        qty: "0.1",
+        qty_out: "9.94",
+        fee: "0.02",
+        fee_asset: USDC.address!,
+        issues: ["Insufficient balance"],
+      },
+    });
+
+    const res = await post("/api/orders/exit-quote", { asset_id: SOL.id, qty: "0.1" }, cookie);
+
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ qty_out: "9.94", fee: "0.02", fee_asset: "USDC", issues: ["Insufficient balance"] });
+    expect(gateway.createOrder.mock.calls[0]![1]).toMatchObject({ asset_id: SOL.id, side: "sell", qty: "0.1", qty_unit: "base" });
+    expect(gateway.executeOrder).not.toHaveBeenCalled();
+  });
+
+  it("refuses an invalid body and a cash asset", async () => {
+    expect((await post("/api/orders/exit-quote", { asset_id: SOL.id, qty: "-1" }, cookie)).status).toBe(400);
+    expect((await post("/api/orders/exit-quote", { asset_id: USDC.id, qty: "1" }, cookie)).status).toBe(400);
+    expect(gateway.createOrder).not.toHaveBeenCalled();
+  });
+});

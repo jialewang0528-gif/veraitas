@@ -8,6 +8,7 @@ import { authRoutes } from "./routes/auth.ts";
 import { exitRoutes } from "./routes/exits.ts";
 import { marketRoutes } from "./routes/market.ts";
 import { orderRoutes } from "./routes/orders.ts";
+import { quoteRoutes } from "./routes/quotes.ts";
 import { transferRoutes } from "./routes/transfers.ts";
 import { walletRoutes } from "./routes/wallet.ts";
 import type * as gateway from "./tm/gateway.ts";
@@ -25,6 +26,7 @@ export function createApp(deps: AppDeps) {
     .route("/api", authRoutes(deps))
     .route("/api", walletRoutes(deps))
     .route("/api", marketRoutes(deps))
+    .route("/api", quoteRoutes(deps))
     .route("/api", orderRoutes(deps))
     .route("/api", transferRoutes(deps))
     .route("/api", exitRoutes(deps))
