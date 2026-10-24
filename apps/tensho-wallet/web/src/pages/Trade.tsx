@@ -216,7 +216,7 @@ function Ticket({
             onClick={() => onSide(s)}
             className={`h-[42px] cursor-pointer rounded-[10px] border-none text-[15px] font-bold capitalize ${
               side === s
-                ? "bg-accent text-ink"
+                ? "bg-accent text-white"
                 : "bg-transparent text-muted hover:text-text"
             }`}
           >
@@ -312,7 +312,7 @@ function Ticket({
                 onClick={() => setAutoSell(value)}
                 className={`h-8 cursor-pointer rounded-full border px-3 text-[11px] font-bold transition-colors duration-200 disabled:cursor-not-allowed disabled:opacity-40 ${
                   autoSell === value
-                    ? "border-text bg-text text-ink"
+                    ? "border-accent bg-accent text-white"
                     : `border-edge bg-transparent hover:border-faint ${value === null ? "text-muted" : value > 0 ? "text-up" : "text-down"}`
                 }`}
               >

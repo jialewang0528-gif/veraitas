@@ -39,7 +39,7 @@ export function Activity() {
               aria-pressed={active}
               onClick={() => setFilter(f)}
               className={`h-[38px] cursor-pointer rounded-full border px-[18px] text-sm font-bold ${
-                active ? "border-accent bg-accent text-ink" : "border-edge bg-transparent text-muted hover:text-text"
+                active ? "border-accent bg-accent text-white" : "border-edge bg-transparent text-muted hover:text-text"
               }`}
             >
               {f.label}

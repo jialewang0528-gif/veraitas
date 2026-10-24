@@ -247,7 +247,7 @@ export function AgentPanel({ tokens }: { tokens: AssetRow[] }) {
     <Card className="flex h-[560px] flex-col overflow-hidden">
       <header className="flex items-center justify-between border-b border-line px-5 py-3.5">
         <div className="flex items-center gap-2.5">
-          <span className="flex size-7 items-center justify-center rounded-full bg-text text-ink">
+          <span className="flex size-7 items-center justify-center rounded-full bg-accent text-white">
             <Sparkles aria-hidden className="size-3.5" strokeWidth={2} />
           </span>
           <div className="flex flex-col">
@@ -381,7 +381,7 @@ export function AgentPanel({ tokens }: { tokens: AssetRow[] }) {
           type="submit"
           disabled={!draft.trim() || pending}
           aria-label="Send"
-          className="flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-full border-none bg-text text-ink disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-full border-none bg-accent text-white disabled:cursor-not-allowed disabled:opacity-40"
         >
           <ArrowUp aria-hidden className="size-4" strokeWidth={2.25} />
         </button>

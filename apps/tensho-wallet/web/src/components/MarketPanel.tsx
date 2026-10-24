@@ -27,8 +27,8 @@ const RANGE_LABEL: Record<ChartRange, string> = {
   "1M": "past month",
 };
 
-const UP = "#3ddc97";
-const DOWN = "#ff6b6b";
+const UP = "#21c95e";
+const DOWN = "#ff622e";
 
 function PriceChart({
   points,
@@ -53,12 +53,12 @@ function PriceChart({
       autoSize: true,
       layout: {
         background: { type: ColorType.Solid, color: "transparent" },
-        textColor: "#87847e",
+        textColor: "#737684",
         fontFamily: "DM Sans, system-ui, sans-serif",
         fontSize: 11,
         attributionLogo: false,
       },
-      grid: { vertLines: { visible: false }, horzLines: { color: "#1c1c1b" } },
+      grid: { vertLines: { visible: false }, horzLines: { color: "#15141f" } },
       rightPriceScale: {
         borderVisible: false,
         scaleMargins: { top: 0.12, bottom: 0.08 },
@@ -67,14 +67,14 @@ function PriceChart({
       crosshair: {
         mode: CrosshairMode.Magnet,
         vertLine: {
-          color: "#6f6d68",
+          color: "#4a4c5c",
           style: LineStyle.Dashed,
-          labelBackgroundColor: "#2a2a28",
+          labelBackgroundColor: "#262535",
         },
         horzLine: {
-          color: "#6f6d68",
+          color: "#4a4c5c",
           style: LineStyle.Dashed,
-          labelBackgroundColor: "#2a2a28",
+          labelBackgroundColor: "#262535",
         },
       },
       handleScale: false,
@@ -107,7 +107,7 @@ function PriceChart({
       priceLineColor: color,
       priceLineStyle: LineStyle.Dotted,
       crosshairMarkerBorderColor: color,
-      crosshairMarkerBackgroundColor: "#0f0f0e",
+      crosshairMarkerBackgroundColor: "#060510",
       priceFormat: {
         type: "custom",
         formatter: (price: number) => usd(price),
@@ -123,7 +123,7 @@ function PriceChart({
     // Where the range opened, so "up or down since then" reads at a glance.
     series.createPriceLine({
       price: first,
-      color: "#6f6d68",
+      color: "#4a4c5c",
       lineWidth: 1,
       lineStyle: LineStyle.Dashed,
       axisLabelVisible: false,
@@ -323,7 +323,7 @@ export function MarketPanel({ token }: { token: AssetRow }) {
               onClick={() => setRange(r)}
               className={`h-8 cursor-pointer rounded-full border px-3.5 text-[11px] font-bold tracking-[0.1em] transition-colors duration-200 ${
                 range === r
-                  ? "border-text bg-text text-ink"
+                  ? "border-accent bg-accent text-white"
                   : "border-edge bg-transparent text-muted hover:border-faint hover:text-text"
               }`}
             >

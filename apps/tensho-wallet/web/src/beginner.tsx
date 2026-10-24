@@ -55,11 +55,11 @@ export function BeginnerToggle() {
       </span>
       <span
         aria-hidden
-        className={`relative h-[22px] w-[38px] shrink-0 rounded-full transition-colors duration-200 ${beginner ? "bg-text" : "bg-edge"}`}
+        className={`relative h-[22px] w-[38px] shrink-0 rounded-full transition-colors duration-200 ${beginner ? "bg-accent" : "bg-edge"}`}
       >
         <span
           className={`absolute top-[3px] size-4 rounded-full transition-[transform,background-color] duration-200 ease-[var(--ease-out)] ${
-            beginner ? "translate-x-[19px] bg-ink" : "translate-x-[3px] bg-text"
+            beginner ? "translate-x-[19px] bg-white" : "translate-x-[3px] bg-muted"
           }`}
         />
       </span>

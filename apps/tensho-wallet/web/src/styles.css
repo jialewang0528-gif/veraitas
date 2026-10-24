@@ -1,22 +1,23 @@
 @import "tailwindcss";
 
-/* Monochrome chrome (warm near-black, off-white ink, greys) from the Michael Wang design system.
-   Color is kept for information only: gains and losses, statuses, transaction kinds, token tiles, warnings. */
+/* Blue-black chrome with an indigo accent, after Fomo's palette. Green and orange-red carry gains and losses;
+   the remaining hues are for information only: statuses, transaction kinds, token tiles, warnings. */
 @theme {
-  --color-ink: #0f0f0e;
-  --color-night: #0b0b0a;
-  --color-panel: #161615;
-  --color-edge: #2a2a28;
-  --color-line: #222220;
-  --color-text: #ebe8e1;
-  --color-muted: #9d9a93;
-  --color-faint: #87847e;
-  --color-accent: #ebe8e1;
+  --color-ink: #060510;
+  --color-night: #04030c;
+  --color-panel: #12111a;
+  --color-edge: #262535;
+  --color-line: #1b1a27;
+  --color-text: #f7f7f7;
+  --color-muted: #9899a3;
+  --color-faint: #737684;
+  --color-accent: #516af6;
+  --color-accent-strong: #4356ff;
   --color-cyan: #45e3ff;
   --color-pink: #ff4fa3;
-  --color-up: #3ddc97;
-  --color-down: #ff6b6b;
-  --color-amber: #ffb547;
+  --color-up: #21c95e;
+  --color-down: #ff622e;
+  --color-amber: #f9e45b;
   --color-violet: #b78cff;
   --color-warn-bg: #1e1510;
   --color-warn-edge: #5a3a1e;
@@ -48,8 +49,8 @@
   }
 
   ::selection {
-    background: var(--color-text);
-    color: var(--color-ink);
+    background: var(--color-accent);
+    color: #fff;
   }
 
   a {
@@ -65,7 +66,7 @@
   }
 
   :focus-visible {
-    outline: 2px solid var(--color-text);
+    outline: 2px solid var(--color-accent);
     outline-offset: 3px;
   }
 
@@ -109,7 +110,7 @@
     position: absolute;
     inset: 0;
     pointer-events: none;
-    background: linear-gradient(105deg, transparent 35%, rgb(235 232 225 / 0.06) 50%, transparent 65%);
+    background: linear-gradient(105deg, transparent 35%, rgb(81 106 246 / 0.09) 50%, transparent 65%);
     background-size: 250% 100%;
     animation: sheen 7s var(--ease-inout) infinite;
   }
@@ -139,10 +140,10 @@
 @keyframes live-pulse {
   0%,
   100% {
-    box-shadow: 0 0 0 0 rgb(61 220 151 / 0.5);
+    box-shadow: 0 0 0 0 rgb(33 201 94 / 0.5);
   }
   50% {
-    box-shadow: 0 0 0 5px rgb(61 220 151 / 0);
+    box-shadow: 0 0 0 5px rgb(33 201 94 / 0);
   }
 }
 

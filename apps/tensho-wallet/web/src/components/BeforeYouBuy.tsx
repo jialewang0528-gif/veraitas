@@ -101,7 +101,7 @@ export function HoldButton({
       onPointerCancel={hold.stop}
       onKeyDown={onKeyDown}
       onKeyUp={onKeyUp}
-      className="relative h-[54px] w-full cursor-pointer touch-none overflow-hidden rounded-full border border-text bg-text text-[12px] font-bold tracking-[0.14em] text-ink uppercase select-none disabled:cursor-not-allowed disabled:opacity-40"
+      className="relative h-[54px] w-full cursor-pointer touch-none overflow-hidden rounded-full border border-accent bg-accent text-[12px] font-bold tracking-[0.14em] text-white uppercase select-none disabled:cursor-not-allowed disabled:opacity-40"
     >
       <span
         aria-hidden
