@@ -11,6 +11,7 @@ import { useEffect, useRef, useState } from "react";
 import { useMarket } from "../api.ts";
 import { compactUsd, usd } from "../format.ts";
 import type { AssetRow, ChartRange, MarketData } from "../types.ts";
+import { Explainable } from "./Explain.tsx";
 import { AssetTile, Card, Label, Mono, PriceChange, Spinner } from "./ui.tsx";
 
 const RANGES: ChartRange[] = ["1H", "1D", "1W", "1M"];
@@ -117,16 +118,32 @@ function PriceChart({
       axisLabelVisible: false,
     });
     api.timeScale().fitContent();
-    return () => { if (chart.current === api) api.removeSeries(series); };
+    return () => {
+      if (chart.current === api) api.removeSeries(series);
+    };
   }, [points, range]);
 
   return <div ref={container} className="h-[340px] w-full" />;
 }
 
-function StatItem({ label, value }: { label: string; value: string }) {
+function StatItem({
+  label,
+  value,
+  symbol,
+}: {
+  label: string;
+  value: string;
+  symbol: string;
+}) {
   return (
     <div className="flex flex-col gap-1.5">
-      <Label>{label}</Label>
+      <Explainable
+        label={label}
+        value={value}
+        context={`${symbol} market stats on the Trade page`}
+      >
+        <Label>{label}</Label>
+      </Explainable>
       <Mono className="text-[15px] font-medium">{value}</Mono>
     </div>
   );
@@ -167,10 +184,26 @@ export function MarketPanel({ token }: { token: AssetRow }) {
           </div>
         </div>
         <div className="grid grid-cols-4 gap-7">
-          <StatItem label="Market cap" value={compactUsd(stats?.market_cap)} />
-          <StatItem label="24h volume" value={compactUsd(stats?.volume_24h)} />
-          <StatItem label="24h low" value={usd(stats?.low_24h)} />
-          <StatItem label="24h high" value={usd(stats?.high_24h)} />
+          <StatItem
+            symbol={token.symbol}
+            label="Market cap"
+            value={compactUsd(stats?.market_cap)}
+          />
+          <StatItem
+            symbol={token.symbol}
+            label="24h volume"
+            value={compactUsd(stats?.volume_24h)}
+          />
+          <StatItem
+            symbol={token.symbol}
+            label="24h low"
+            value={usd(stats?.low_24h)}
+          />
+          <StatItem
+            symbol={token.symbol}
+            label="24h high"
+            value={usd(stats?.high_24h)}
+          />
         </div>
       </div>
 

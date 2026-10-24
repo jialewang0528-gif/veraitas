@@ -6,6 +6,7 @@ import { aboutToken, guideNumbers } from "../guide.ts";
 import { useHold } from "../hold.ts";
 import { swingSummary } from "../swing.ts";
 import type { AssetRow, Quote } from "../types.ts";
+import { Explainable } from "./Explain.tsx";
 import { Label, Mono } from "./ui.tsx";
 
 type Estimate = Pick<Quote, "qty_out" | "fee" | "fee_asset">;
@@ -40,15 +41,23 @@ function Row({
   value,
   tone = "",
   note,
+  context = "",
 }: {
   label: string;
   value: string;
   tone?: string;
   note?: string;
+  context?: string;
 }) {
   return (
     <div className="flex items-baseline justify-between gap-4 border-b border-line py-2.5 last:border-b-0">
-      <span className="text-[13px] text-muted">{label}</span>
+      <Explainable
+        label={label}
+        value={note ? `${value} (${note})` : value}
+        context={context}
+      >
+        <span className="text-[13px] text-muted">{label}</span>
+      </Explainable>
       <span className="flex flex-col items-end">
         <Mono className={`text-[14px] ${tone}`}>{value}</Mono>
         {note && <span className="text-[11px] text-faint">{note}</span>}
@@ -154,6 +163,7 @@ export function BeforeYouBuy({
     : "Unavailable";
   const about = aboutToken(token.symbol);
   const amountLabel = usd(spend);
+  const ctx = `Before you buy card for ${amountLabel} of ${token.symbol} (${token.name}) in a beginner crypto trading app`;
 
   return (
     <section
@@ -168,14 +178,16 @@ export function BeforeYouBuy({
       </div>
       <div className="flex flex-col">
         <Row
+          context={ctx}
           label="You get"
           value={
             qtyOut ? `~${tokenAmount(qtyOut, token.symbol)}` : "Unavailable"
           }
         />
-        <Row label="Fee" value={fee} />
-        <Row label="Network fee" value="Covered" />
+        <Row context={ctx} label="Fee" value={fee} />
+        <Row context={ctx} label="Network fee" value="Covered" />
         <Row
+          context={ctx}
           label="Hidden cost"
           value={money(
             n.hiddenCost === null ? null : Math.max(0, n.hiddenCost),
@@ -183,20 +195,19 @@ export function BeforeYouBuy({
           note="Price paid vs. chart price"
         />
         <Row
+          context={ctx}
           label="Sell-back now"
           value={n.sellBack === null ? "Unavailable" : `~${money(n.sellBack)}`}
-          note={
-            n.sellBackEstimated
-              ? "Estimate"
-              : undefined
-          }
+          note={n.sellBackEstimated ? "Estimate" : undefined}
         />
         <Row
+          context={ctx}
           label="Round-trip cost"
           value={money(n.roundTripCost)}
           note="Fee + spread"
         />
         <Row
+          context={ctx}
           label="24h range"
           value={
             n.range24h
@@ -205,6 +216,7 @@ export function BeforeYouBuy({
           }
         />
         <Row
+          context={ctx}
           label="Worst day, 30d"
           value={swing ? `${usd(swing.worstValueUsd)}` : "Unavailable"}
           note={
@@ -215,6 +227,7 @@ export function BeforeYouBuy({
           tone={swing ? "text-down" : ""}
         />
         <Row
+          context={ctx}
           label="Past hour"
           value={n.pastHour === null ? "Unavailable" : percent(n.pastHour)}
           tone={
