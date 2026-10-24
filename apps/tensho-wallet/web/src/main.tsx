@@ -3,6 +3,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Route, Routes } from "react-router";
 import { ApiError } from "./api.ts";
+import { BeginnerModeProvider } from "./beginner.tsx";
 import { AppShell } from "./components/AppShell.tsx";
 import { Activity } from "./pages/Activity.tsx";
 import { AddFunds } from "./pages/AddFunds.tsx";
@@ -29,6 +30,7 @@ const queryClient = new QueryClient({
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
+      <BeginnerModeProvider>
       <BrowserRouter>
         <Routes>
           <Route path="/signup" element={<SignUp />} />
@@ -45,6 +47,7 @@ createRoot(document.getElementById("root")!).render(
           </Route>
         </Routes>
       </BrowserRouter>
+      </BeginnerModeProvider>
     </QueryClientProvider>
   </StrictMode>,
 );

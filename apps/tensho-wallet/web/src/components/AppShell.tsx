@@ -3,6 +3,7 @@ import { Activity, ArrowLeftRight, House, LogOut, Plus, Receipt, Send, Target, W
 import type { FormEvent, ReactNode } from "react";
 import { Navigate, NavLink, Outlet, useLocation, useNavigate } from "react-router";
 import { api, ApiError, useMe } from "../api.ts";
+import { BeginnerToggle } from "../beginner.tsx";
 import type { Profile } from "../types.ts";
 import { Banner, Button, Logo, Spinner, Wordmark } from "./ui.tsx";
 
@@ -97,7 +98,10 @@ export function AppShell() {
             </NavLink>
           ))}
         </nav>
-        <CustomerCard email={me.data.email} />
+        <div className="mt-auto flex flex-col gap-3">
+          <BeginnerToggle />
+          <CustomerCard email={me.data.email} />
+        </div>
       </aside>
       <main className="flex-1 overflow-y-auto">
         <div key={location.pathname} className="page-enter flex min-h-full flex-col gap-7 px-12 py-10">
