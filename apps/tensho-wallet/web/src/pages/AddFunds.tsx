@@ -22,13 +22,13 @@ function WalletCard({ wallet }: { wallet: Wallet }) {
 
   return (
     <Card className="flex items-center gap-7 p-7">
-      <div className="shrink-0 rounded-2xl bg-text p-3">
-        <QRCodeSVG value={wallet.address} size={152} bgColor="#F4F0FF" fgColor="#0D0A17" title={`${chain.name} address QR code`} />
+      <div className="shrink-0 rounded-[14px] bg-text p-3">
+        <QRCodeSVG value={wallet.address} size={152} bgColor="#EBE8E1" fgColor="#0F0F0E" title={`${chain.name} address QR code`} />
       </div>
       <div className="flex min-w-0 flex-col gap-3.5">
         <div className="flex items-center gap-2.5">
           <AssetTile symbol={chain.symbol} size={32} />
-          <h2 className="m-0 text-[19px] font-bold">{chain.name}</h2>
+          <h2 className="m-0 font-display text-[18px] leading-none font-bold">{chain.name}</h2>
         </div>
         <div className="flex flex-col gap-1.5">
           <Label>Your address</Label>
@@ -36,7 +36,7 @@ function WalletCard({ wallet }: { wallet: Wallet }) {
         </div>
         {chain.note && <p className="m-0 text-sm leading-snug text-muted">{chain.note}</p>}
         <div>
-          <Button className="h-11 rounded-xl px-5 text-sm" onClick={copy}>
+          <Button className="h-11 px-5" onClick={copy}>
             {copied ? "Copied" : "Copy address"}
           </Button>
         </div>
@@ -49,7 +49,7 @@ export function AddFunds() {
   const me = useMe();
 
   return (
-    <Page title="Add funds" subtitle="Send crypto from any wallet or exchange to your Tensho address.">
+    <Page title="Add funds" subtitle="Send crypto from any wallet or exchange to your VerAItas address.">
       {me.isPending && <Spinner />}
       {me.data && me.data.wallets.length === 0 && (
         <Banner title="Your wallet is still being set up">Sign in again to finish creating your addresses.</Banner>

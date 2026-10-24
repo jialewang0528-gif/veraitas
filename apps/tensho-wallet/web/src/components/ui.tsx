@@ -6,11 +6,12 @@ import { percent } from "../format.ts";
 type Variant = "primary" | "secondary";
 
 const BUTTON_BASE =
-  "inline-flex h-12 items-center justify-center gap-2 rounded-[14px] px-[22px] text-[15px] font-bold no-underline transition-opacity disabled:cursor-not-allowed disabled:opacity-50";
+  "inline-flex h-12 cursor-pointer items-center justify-center gap-2 rounded-full border px-6 text-[12px] font-bold tracking-[0.14em] uppercase no-underline transition-[background-color,color,border-color,transform] duration-200 ease-[var(--ease-out)] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40";
 
+// Primary is an ink fill that empties on hover; secondary is an outline that fills. Same move as the portfolio.
 const BUTTON_VARIANT: Record<Variant, string> = {
-  primary: "bg-accent text-ink hover:text-ink hover:opacity-90",
-  secondary: "border border-edge bg-panel text-text hover:border-muted hover:text-text",
+  primary: "border-text bg-text text-ink hover:border-muted hover:bg-transparent hover:text-text",
+  secondary: "border-edge bg-transparent text-text hover:border-text hover:bg-text hover:text-ink",
 };
 
 function buttonClass(variant: Variant = "primary", extra = ""): string {
@@ -31,7 +32,11 @@ export function ButtonLink({ variant = "primary", className = "", ...props }: Li
 
 export function TextButton({ onClick, children }: { onClick: () => void; children: ReactNode }) {
   return (
-    <button type="button" onClick={onClick} className="cursor-pointer border-none bg-transparent p-0 font-bold text-cyan underline">
+    <button
+      type="button"
+      onClick={onClick}
+      className="cursor-pointer border-none bg-transparent p-0 font-bold text-text underline decoration-1 underline-offset-4 hover:text-muted"
+    >
       {children}
     </button>
   );
@@ -47,7 +52,7 @@ export function DetailRow({ label, value, last = false }: { label: string; value
 }
 
 export function Card({ className = "", children }: { className?: string; children: ReactNode }) {
-  return <section className={`rounded-[18px] border border-edge bg-panel ${className}`}>{children}</section>;
+  return <section className={`rounded-[14px] border border-edge bg-panel ${className}`}>{children}</section>;
 }
 
 export function Mono({ className = "", children }: { className?: string; children: ReactNode }) {
@@ -55,14 +60,14 @@ export function Mono({ className = "", children }: { className?: string; childre
 }
 
 export function Label({ children }: { children: ReactNode }) {
-  return <span className="text-xs tracking-[0.12em] text-muted uppercase">{children}</span>;
+  return <span className="text-[11px] leading-[14px] font-bold tracking-[0.14em] text-muted uppercase">{children}</span>;
 }
 
 export function Stat({ label, value, detail }: { label: string; value: ReactNode; detail?: ReactNode }) {
   return (
     <div className="flex flex-col gap-1">
       <Label>{label}</Label>
-      <Mono className="text-[26px]">{value}</Mono>
+      <Mono className="text-[30px] font-medium tracking-[-0.03em]">{value}</Mono>
       {detail && <Mono className="text-sm text-muted">{detail}</Mono>}
     </div>
   );
@@ -82,8 +87,8 @@ export function Banner({
       ? "border-warn-edge bg-warn-bg text-warn-text"
       : "border-down/40 bg-down/10 text-text";
   return (
-    <div role={tone === "error" ? "alert" : "status"} className={`flex items-start gap-3.5 rounded-2xl border px-5 py-4 ${palette}`}>
-      <AlertTriangle aria-hidden className={`mt-0.5 size-5 shrink-0 ${tone === "warning" ? "text-amber" : "text-down"}`} />
+    <div role={tone === "error" ? "alert" : "status"} className={`flex items-start gap-3.5 rounded-[14px] border px-5 py-4 ${palette}`}>
+      <AlertTriangle aria-hidden strokeWidth={1.5} className={`mt-0.5 size-5 shrink-0 ${tone === "warning" ? "text-amber" : "text-down"}`} />
       <div className="flex flex-col gap-1 text-sm leading-relaxed">
         {title && <span className={`text-[15px] font-bold ${tone === "warning" ? "text-warn-title" : ""}`}>{title}</span>}
         <span>{children}</span>
@@ -93,7 +98,7 @@ export function Banner({
 }
 
 const TILE_COLORS: Record<string, string> = { USDC: "bg-cyan", SOL: "bg-violet", PENGU: "bg-amber", ETH: "bg-cyan" };
-const TILE_FALLBACK = ["bg-accent", "bg-cyan", "bg-violet", "bg-amber", "bg-up"];
+const TILE_FALLBACK = ["bg-pink", "bg-cyan", "bg-violet", "bg-amber", "bg-up"];
 const TILE_LABELS: Record<string, string> = { USDC: "USD", PENGU: "PG" };
 
 function tileColor(symbol: string): string {
@@ -103,14 +108,24 @@ function tileColor(symbol: string): string {
   return TILE_FALLBACK[hash % TILE_FALLBACK.length]!;
 }
 
+// Token logos keep their own colors: they are the one place hue belongs in this monochrome app.
 export function AssetTile({ symbol, icon, size = 40 }: { symbol: string; icon?: string | null; size?: number }) {
-  const style = { width: size, height: size, borderRadius: size * 0.28 };
-  if (icon) return <img src={icon} alt="" style={style} className="shrink-0 bg-line object-cover" />;
+  const style = { width: size, height: size, borderRadius: size / 2 };
+  if (icon) {
+    return (
+      <img
+        src={icon}
+        alt=""
+        style={style}
+        className="shrink-0 bg-line object-cover"
+      />
+    );
+  }
   return (
     <div
       aria-hidden
       style={style}
-      className={`flex shrink-0 items-center justify-center text-xs font-bold text-ink ${tileColor(symbol)}`}
+      className={`flex shrink-0 items-center justify-center text-[10px] font-bold tracking-[0.04em] text-ink ${tileColor(symbol)}`}
     >
       {TILE_LABELS[symbol] ?? symbol.slice(0, 3)}
     </div>
@@ -156,7 +171,7 @@ export function SettlementNotice({
   }[state];
   const { tone, message } = outcome;
   return (
-    <div role="status" className={`flex flex-col gap-3 rounded-2xl border px-4 py-3.5 text-sm ${tone}`}>
+    <div role="status" className={`flex flex-col gap-3 rounded-[14px] border px-4 py-3.5 text-sm ${tone}`}>
       <span>{message}</span>
       <div className="flex items-center justify-between">
         {explorerUrl ? (
@@ -185,37 +200,39 @@ export function TxAmount({ amount, value, className = "" }: { amount: string; va
 
 export function TxGlyph({ glyph, color }: { glyph: string; color: string }) {
   return (
-    <div className={`flex size-9 shrink-0 items-center justify-center rounded-full border border-edge font-mono ${color}`}>
+    <div className={`flex size-9 shrink-0 items-center justify-center rounded-full border border-edge text-sm font-bold ${color}`}>
       {glyph}
     </div>
   );
 }
 
-export function Logo() {
+// No logo, only the wordmark: the "AI" set heavier than the rest.
+export function Wordmark({ className = "", animate = false }: { className?: string; animate?: boolean }) {
+  const parts: [string, boolean][] = [
+    ["Ver", false],
+    ["AI", true],
+    ["tas", false],
+  ];
   return (
-    <div className="flex items-center gap-2.5">
-      <div className="flex size-[34px] items-center justify-center rounded-[10px] bg-accent font-display text-sm font-bold text-ink">
-        T
-      </div>
-      <span className="font-display text-[19px] font-bold">Tensho</span>
-    </div>
+    <span aria-label="VerAItas" className={`font-display leading-none tracking-[-0.03em] ${animate ? "wordmark-in" : ""} ${className}`}>
+      {parts.map(([text, heavy], i) => (
+        <span key={text} aria-hidden className={heavy ? "font-extrabold text-text" : "font-medium text-muted"} style={animate ? { animationDelay: `${i * 120}ms` } : undefined}>
+          {text}
+        </span>
+      ))}
+    </span>
   );
 }
 
+export function Logo() {
+  return <Wordmark className="text-[24px]" />;
+}
+
 export function GridHorizon({ className = "" }: { className?: string }) {
-  const rays = [-152, 114, 380, 646, 912];
   return (
-    <svg viewBox="0 0 760 190" preserveAspectRatio="xMidYMax slice" aria-hidden className={`pointer-events-none absolute inset-0 h-full w-full ${className}`}>
-      {[
-        [105, 0.4],
-        [129, 0.3],
-        [160, 0.2],
-      ].map(([y, opacity]) => (
-        <line key={y} x1="0" y1={y} x2="760" y2={y} stroke="#45E3FF" strokeWidth="1" opacity={opacity} />
-      ))}
-      {rays.map((x) => (
-        <line key={x} x1="380" y1="105" x2={x} y2="190" stroke="#45E3FF" strokeWidth="1" opacity="0.2" />
-      ))}
-    </svg>
+    <div aria-hidden className={`pointer-events-none absolute inset-0 ${className}`}>
+      <div className="dot-grid absolute inset-0" />
+      <div className="sheen" />
+    </div>
   );
 }

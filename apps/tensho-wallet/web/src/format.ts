@@ -144,7 +144,7 @@ export function describeTransaction(tx: TransactionDetail, assets: AssetRow[] = 
     const executed = Number(tx.order.executed_qty) * Number(tx.order.executed_vwap);
     return {
       glyph: buy ? "↗" : "↘",
-      glyphColor: buy ? "text-up" : "text-accent",
+      glyphColor: buy ? "text-up" : "text-pink",
       title: `${buy ? "Bought" : "Sold"} ${symbol}`,
       detail: detail || "Market order",
       amount,

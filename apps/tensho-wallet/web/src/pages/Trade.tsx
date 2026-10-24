@@ -29,7 +29,7 @@ const SELL_CHIPS = [25, 50, 75];
 function TokenList({ tokens, selected, onSelect }: { tokens: AssetRow[]; selected?: string; onSelect: (assetId: string) => void }) {
   return (
     <Card className="flex max-h-[720px] flex-col gap-1.5 overflow-y-auto p-[18px]">
-      <h2 className="m-0 mb-2 ml-1.5 text-[17px] font-bold">Tokens</h2>
+      <h2 className="m-0 mb-3 ml-1.5 font-display text-[18px] leading-none font-bold">Tokens</h2>
       {tokens.map((token) => {
         const active = token.asset_id === selected;
         return (
@@ -38,7 +38,7 @@ function TokenList({ tokens, selected, onSelect }: { tokens: AssetRow[]; selecte
             type="button"
             aria-pressed={active}
             onClick={() => onSelect(token.asset_id)}
-            className={`flex cursor-pointer items-center gap-3 rounded-[14px] border p-3 text-left text-text ${
+            className={`group flex cursor-pointer items-center gap-3 rounded-[14px] border p-3 text-left text-text transition-colors duration-200 ${
               active ? "border-accent bg-line" : "border-transparent bg-transparent hover:bg-line/60"
             }`}
           >
@@ -130,7 +130,7 @@ function Ticket({
 
       <label className="flex flex-col items-center gap-1.5 pt-3.5 pb-1">
         <Label>{buy ? "You pay" : "You sell"}</Label>
-        <span className="flex items-baseline gap-2 font-mono text-[56px]">
+        <span className="flex items-baseline gap-2 text-[64px] font-medium tracking-[-0.04em]">
           {buy && <span className="text-muted">$</span>}
           <input
             value={amount}
@@ -174,7 +174,7 @@ function Ticket({
           value={q ? (buy ? tokenAmount(q.qty_out, token.symbol) : `${usd(q.qty_out)} USDC`) : "—"}
         />
         <DetailRow label="Price" value={priceEach === null ? "—" : `${usd(priceEach)} / ${token.symbol}`} />
-        <DetailRow label="Network fee" value="Covered by Tensho" />
+        <DetailRow label="Network fee" value="Covered by VerAItas" />
         {q && Number(q.fee) > 0 && <DetailRow label="Fee" value={`${tokenAmount(q.fee)} ${q.fee_asset}`} />}
         <p className="m-0 py-2.5 text-xs text-faint">
           {quote.data ? <QuoteAge preparedAt={quote.data.prepared_at} /> : quoteHint(quote.isFetching, quote.isError)}
@@ -262,7 +262,7 @@ export function Trade() {
             cash={cash}
           />
           <Card className="flex flex-col gap-4 p-[22px]">
-            <h2 className="m-0 text-[17px] font-bold">Your {token.symbol}</h2>
+            <h2 className="m-0 font-display text-[18px] leading-none font-bold">Your {token.symbol}</h2>
             <Stat
               label="Balance"
               value={tokenAmount(position?.total ?? "0", token.symbol)}

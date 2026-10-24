@@ -20,7 +20,7 @@ export function transferRoutes({ gateway, assets }: AppDeps) {
 
   async function prepare(userId: string, { asset_id, qty, to }: TransferBody) {
     const asset = assets.byId(asset_id);
-    if (!asset) throw new ApiError(400, "invalid_argument", `asset_id: ${asset_id} cannot be sent from Tensho`);
+    if (!asset) throw new ApiError(400, "invalid_argument", `asset_id: ${asset_id} cannot be sent from VerAItas`);
     if (!isAddressOn(asset.chain, to)) {
       throw new ApiError(400, "invalid_argument", `to: must be a ${asset.chain} address`);
     }

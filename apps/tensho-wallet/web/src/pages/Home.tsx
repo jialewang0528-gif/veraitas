@@ -4,12 +4,6 @@ import { Page } from "../components/AppShell.tsx";
 import { AssetTile, Banner, ButtonLink, Card, GridHorizon, Label, Mono, PriceChange, Spinner, TxAmount, TxGlyph } from "../components/ui.tsx";
 import { chainName, describeTransaction, holdings, percent, relativeTime, signedUsd, tokenAmount, toRatio, usd } from "../format.ts";
 
-function greeting(hour = new Date().getHours()): string {
-  if (hour < 12) return "Good morning";
-  if (hour < 18) return "Good afternoon";
-  return "Good evening";
-}
-
 const HOLDING_GRID = "grid grid-cols-[2.2fr_1.3fr_1fr_1fr_0.8fr] items-center";
 
 export function Home() {
@@ -28,7 +22,7 @@ export function Home() {
   const total = priced ? Number(priced.total_usd) : unpriced ? unpricedTotal : null;
 
   return (
-    <Page title={greeting()} subtitle="Here is where your money stands.">
+    <Page title="Portfolio" subtitle="Here is where your money stands.">
       {!ready && (
         <Banner title="Your wallet is still being set up">
           Sign in again to retry.{me.data?.warning && ` (${me.data.warning})`}
@@ -38,19 +32,19 @@ export function Home() {
       {portfolio.error && <Banner tone="error">{portfolio.error.message}</Banner>}
 
       <div className="grid grid-cols-[2fr_1fr] gap-5">
-        <Card className="relative flex h-[190px] flex-col gap-2 overflow-hidden p-7">
+        <Card className="relative flex h-[230px] flex-col justify-end gap-2 overflow-hidden p-8">
           <GridHorizon />
           <span className="relative">
             <Label>Total balance</Label>
           </span>
-          <Mono className="relative text-[52px] leading-tight">{total === null ? "—" : usd(total)}</Mono>
+          <Mono className="relative text-[84px] leading-[0.9] font-medium tracking-[-0.04em]">{total === null ? "—" : usd(total)}</Mono>
           {priced && (
             <Mono className={`relative text-[15px] ${Number(priced.change_24h_usd) < 0 ? "text-down" : "text-up"}`}>
               {signedUsd(priced.change_24h_usd)} ({percent(toRatio(priced.change_24h_pct, 100))}) today
             </Mono>
           )}
         </Card>
-        <Card className="grid h-[190px] grid-cols-2 content-center gap-2.5 p-[22px]">
+        <Card className="grid h-[230px] grid-cols-2 content-center gap-3 p-6">
           <ButtonLink to="/trade">Buy</ButtonLink>
           <ButtonLink to="/trade?side=sell" variant="secondary">
             Sell
@@ -66,8 +60,8 @@ export function Home() {
 
       <div className="grid flex-1 grid-cols-[2fr_1fr] gap-5">
         <Card className="flex flex-col px-[26px] py-[22px]">
-          <h2 className="m-0 mb-2 text-[17px] font-bold">Holdings</h2>
-          <div className={`${HOLDING_GRID} border-b border-edge py-2.5 text-xs tracking-[0.08em] text-muted`}>
+          <h2 className="m-0 mb-3 font-display text-[18px] leading-none font-bold tracking-[-0.01em]">Holdings</h2>
+          <div className={`${HOLDING_GRID} border-b border-edge py-2.5 text-[10px] font-bold tracking-[0.14em] text-muted`}>
             <span>ASSET</span>
             <span className="text-right">BALANCE</span>
             <span className="text-right">PRICE</span>
@@ -80,7 +74,7 @@ export function Home() {
             </div>
           )}
           {rows.map((h) => (
-            <div key={`${h.symbol}:${h.chain}`} className={`${HOLDING_GRID} border-b border-line py-3.5`}>
+            <div key={`${h.symbol}:${h.chain}`} className={`group ${HOLDING_GRID} border-b border-line py-3.5 transition-colors duration-200 hover:bg-line/40`}>
               <div className="flex items-center gap-3">
                 <AssetTile symbol={h.symbol} icon={h.icon} />
                 <span className="flex flex-col gap-0.5">

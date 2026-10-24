@@ -1,10 +1,10 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Activity, ArrowLeftRight, House, LogOut, Plus, Send, type LucideIcon } from "lucide-react";
 import type { FormEvent, ReactNode } from "react";
-import { Navigate, NavLink, Outlet, useNavigate } from "react-router";
+import { Navigate, NavLink, Outlet, useLocation, useNavigate } from "react-router";
 import { api, ApiError, useMe } from "../api.ts";
 import type { Profile } from "../types.ts";
-import { Banner, Button, Logo, Spinner } from "./ui.tsx";
+import { Banner, Button, Logo, Spinner, Wordmark } from "./ui.tsx";
 
 const NAV: { to: string; label: string; icon: LucideIcon }[] = [
   { to: "/", label: "Home", icon: House },
@@ -41,6 +41,7 @@ function CustomerCard({ email }: { email: string }) {
 
 export function AppShell() {
   const me = useMe();
+  const location = useLocation();
 
   if (me.error instanceof ApiError && me.error.status === 401) return <Navigate to="/login" replace />;
   if (me.isPending) {
@@ -53,7 +54,7 @@ export function AppShell() {
   if (me.error) {
     return (
       <div className="mx-auto max-w-lg p-12">
-        <Banner tone="error" title="Tensho is unreachable">
+        <Banner tone="error" title="VerAItas is unreachable">
           {me.error.message}
         </Banner>
       </div>
@@ -71,15 +72,23 @@ export function AppShell() {
               to={to}
               end={to === "/"}
               className={({ isActive }) =>
-                `flex h-11 items-center gap-3 rounded-xl px-3.5 text-[15px] no-underline ${
-                  isActive ? "bg-line font-bold text-text hover:text-text" : "text-muted hover:text-text"
+                `group relative flex h-11 items-center gap-3 rounded-full px-4 text-[12px] font-bold tracking-[0.14em] uppercase no-underline transition-colors duration-200 ${
+                  isActive ? "bg-line text-text hover:text-text" : "text-muted hover:text-text"
                 }`
               }
             >
               {({ isActive }) => (
                 <>
-                  <Icon aria-hidden className={`size-[18px] ${isActive ? "text-accent" : ""}`} />
+                  <Icon aria-hidden strokeWidth={1.5} className="size-[17px]" />
                   {label}
+                  <span
+                    aria-hidden
+                    className={`ml-auto text-sm transition-[opacity,transform] duration-300 ease-[var(--ease-out)] ${
+                      isActive ? "opacity-100" : "-translate-x-1 opacity-0 group-hover:translate-x-0 group-hover:opacity-60"
+                    }`}
+                  >
+                    →
+                  </span>
                 </>
               )}
             </NavLink>
@@ -88,7 +97,7 @@ export function AppShell() {
         <CustomerCard email={me.data.email} />
       </aside>
       <main className="flex-1 overflow-y-auto">
-        <div className="flex min-h-full flex-col gap-7 px-12 py-9">
+        <div key={location.pathname} className="page-enter flex min-h-full flex-col gap-7 px-12 py-10">
           <Outlet />
         </div>
       </main>
@@ -96,56 +105,36 @@ export function AppShell() {
   );
 }
 
-function BrandArt() {
-  const rays = [0, 180, 360, 540, 720];
-  const horizon: [number, number, number][] = [
-    [320, 1.5, 1],
-    [345, 1, 0.55],
-    [380, 1, 0.4],
-    [430, 1, 0.25],
-  ];
+// Obys-style corner captions pinned to a full-bleed panel.
+function Corner({ className, children }: { className: string; children: ReactNode }) {
   return (
-    <svg viewBox="0 0 720 480" aria-hidden className="pointer-events-none absolute bottom-0 left-0 w-full">
-      <circle cx="360" cy="250" r="150" fill="none" stroke="#FF4FA3" strokeWidth="2.5" />
-      {[
-        [215, 8],
-        [250, 11],
-        [288, 14],
-      ].map(([y, width]) => (
-        <line key={y} x1="180" y1={y} x2="540" y2={y} stroke="#0A0813" strokeWidth={width} />
-      ))}
-      <rect x="0" y="320" width="720" height="160" fill="#0A0813" />
-      {horizon.map(([y, width, opacity]) => (
-        <line key={y} x1="0" y1={y} x2="720" y2={y} stroke="#45E3FF" strokeWidth={width} opacity={opacity} />
-      ))}
-      {rays.map((x) => (
-        <line key={x} x1="360" y1="320" x2={x} y2="480" stroke="#45E3FF" strokeWidth="1" opacity="0.35" />
-      ))}
-    </svg>
+    <span className={`absolute text-[10px] leading-3 font-medium tracking-[0.18em] text-muted uppercase ${className}`}>{children}</span>
   );
 }
 
 export function AuthLayout({ title, subtitle, children }: { title: string; subtitle: string; children: ReactNode }) {
   return (
-    <div className="grid min-h-full grid-cols-2">
-      <section className="relative flex flex-col gap-10 overflow-hidden border-r border-line bg-night px-14 py-12">
-        <Logo />
-        <div className="relative flex max-w-[520px] flex-col gap-4">
-          <h1 className="m-0 font-display text-[44px] leading-[1.08] font-bold">Crypto money, minus the wallet talk.</h1>
-          <p className="m-0 text-lg leading-snug text-muted">
-            Hold digital dollars, trade tokens and send them anywhere. We handle the keys.
-          </p>
-        </div>
-        <BrandArt />
+    <div className="grid min-h-full grid-cols-[1.25fr_1fr]">
+      <section className="relative flex flex-col justify-end overflow-hidden border-r border-line bg-night px-14 pt-24 pb-16">
+        <div aria-hidden className="dot-grid absolute inset-0" />
+        <Corner className="top-8 left-14">Trading, said plainly</Corner>
+        <Corner className="top-8 right-10">Solana · Base</Corner>
+        <Corner className="right-10 bottom-8">On True Markets Gateway</Corner>
+        <h1 className="relative m-0 text-[clamp(64px,8vw,124px)]">
+          <Wordmark animate />
+        </h1>
+        <p className="relative m-0 mt-8 max-w-[22ch] text-[clamp(26px,2.6vw,40px)] leading-[1.08] font-bold tracking-[-0.03em]">
+          Know the full cost <span className="text-muted">before</span> your money moves.
+        </p>
       </section>
       <section className="flex items-center justify-center p-12">
-        <div className="flex w-[400px] flex-col gap-6">
+        <div className="page-enter flex w-[380px] flex-col gap-7">
           <div className="flex flex-col gap-2">
-            <h2 className="m-0 font-display text-[26px] font-bold">{title}</h2>
+            <h2 className="m-0 font-display text-[30px] leading-[1.1] font-bold tracking-[-0.02em]">{title}</h2>
             <p className="m-0 text-[15px] text-muted">{subtitle}</p>
           </div>
           {children}
-          <p className="m-0 text-center text-xs text-faint">Tensho is a demo neobank running on True Markets gateway rails.</p>
+          <p className="m-0 text-xs leading-relaxed text-faint">VerAItas is a demo neobank running on True Markets gateway rails.</p>
         </div>
       </section>
     </div>
@@ -153,7 +142,7 @@ export function AuthLayout({ title, subtitle, children }: { title: string; subti
 }
 
 const INPUT =
-  "h-12 rounded-xl border border-edge bg-panel px-3.5 text-base text-text outline-none focus:border-muted";
+  "h-12 rounded-[14px] border border-edge bg-transparent px-4 text-base text-text outline-none transition-colors duration-200 hover:border-faint focus:border-text";
 
 export function CredentialsForm({
   endpoint,
@@ -182,11 +171,11 @@ export function CredentialsForm({
 
   return (
     <form onSubmit={onSubmit} className="m-0 flex flex-col gap-4">
-      <label className="flex flex-col gap-1.5 text-[13px] text-muted">
+      <label className="flex flex-col gap-2 text-[11px] font-bold tracking-[0.14em] text-muted uppercase">
         Email
         <input name="email" type="email" required autoComplete="email" className={INPUT} />
       </label>
-      <label className="flex flex-col gap-1.5 text-[13px] text-muted">
+      <label className="flex flex-col gap-2 text-[11px] font-bold tracking-[0.14em] text-muted uppercase">
         Password
         <input
           name="password"
@@ -208,13 +197,13 @@ export function CredentialsForm({
 export function Page({ title, subtitle, children }: { title: string; subtitle: string; children: ReactNode }) {
   return (
     <>
-      <header className="flex items-end justify-between gap-6">
-        <div className="flex flex-col gap-1.5">
-          <h1 className="m-0 font-display text-[28px] font-bold">{title}</h1>
+      <header className="flex items-end justify-between gap-6 border-b border-line pb-6">
+        <div className="flex flex-col gap-3">
+          <h1 className="m-0 font-display text-[44px] leading-none font-bold tracking-[-0.03em]">{title}</h1>
           <p className="m-0 text-[15px] text-muted">{subtitle}</p>
         </div>
-        <span className="flex h-8 shrink-0 items-center gap-2 rounded-2xl border border-edge px-3.5 text-[13px] text-muted">
-          <span className="size-2 rounded-full bg-up" />
+        <span className="flex h-8 shrink-0 items-center gap-2.5 rounded-full border border-edge px-3.5 text-[10px] font-bold tracking-[0.14em] text-text uppercase">
+          <span className="live-dot" />
           Markets open · 24/7
         </span>
       </header>

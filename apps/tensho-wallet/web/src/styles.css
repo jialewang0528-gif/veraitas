@@ -1,16 +1,19 @@
 @import "tailwindcss";
 
+/* Monochrome chrome (warm near-black, off-white ink, greys) from the Michael Wang design system.
+   Color is kept for information only: gains and losses, statuses, transaction kinds, token tiles, warnings. */
 @theme {
-  --color-ink: #0d0a17;
-  --color-night: #0a0813;
-  --color-panel: #171226;
-  --color-edge: #2a2240;
-  --color-line: #1f1933;
-  --color-text: #f4f0ff;
-  --color-muted: #a99fc7;
-  --color-faint: #7d739b;
-  --color-accent: #ff4fa3;
+  --color-ink: #0f0f0e;
+  --color-night: #0b0b0a;
+  --color-panel: #161615;
+  --color-edge: #2a2a28;
+  --color-line: #222220;
+  --color-text: #ebe8e1;
+  --color-muted: #9d9a93;
+  --color-faint: #87847e;
+  --color-accent: #ebe8e1;
   --color-cyan: #45e3ff;
+  --color-pink: #ff4fa3;
   --color-up: #3ddc97;
   --color-down: #ff6b6b;
   --color-amber: #ffb547;
@@ -23,6 +26,9 @@
   --font-display: "Unbounded", sans-serif;
   --font-sans: "DM Sans", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-inout: cubic-bezier(0.65, 0, 0.35, 1);
 }
 
 @layer base {
@@ -38,18 +44,119 @@
     color: var(--color-text);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
+    caret-color: var(--color-text);
+  }
+
+  ::selection {
+    background: var(--color-text);
+    color: var(--color-ink);
   }
 
   a {
-    color: var(--color-cyan);
+    color: var(--color-text);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px;
+    transition: color 180ms var(--ease-out);
   }
 
   a:hover {
-    color: #8ceeff;
+    color: var(--color-muted);
   }
 
   :focus-visible {
-    outline: 2px solid var(--color-cyan);
-    outline-offset: 2px;
+    outline: 2px solid var(--color-text);
+    outline-offset: 3px;
+  }
+
+  input::placeholder {
+    color: var(--color-faint);
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-edge) transparent;
+  }
+}
+
+@layer components {
+  /* The 16px dot grid from the system, faded toward the edges. */
+  .dot-grid {
+    background-image: radial-gradient(var(--color-edge) 1px, transparent 1.4px);
+    background-size: 16px 16px;
+    mask-image: radial-gradient(ellipse at 70% 40%, #000 20%, transparent 75%);
+  }
+
+  .live-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--color-up);
+    animation: live-pulse 2.4s var(--ease-inout) infinite;
+  }
+
+  /* Page entrance: content rises out of a blur. One authored moment per navigation. */
+  .page-enter > * {
+    animation: rise 700ms var(--ease-out) both;
+  }
+  .page-enter > *:nth-child(2) { animation-delay: 60ms; }
+  .page-enter > *:nth-child(3) { animation-delay: 120ms; }
+  .page-enter > *:nth-child(4) { animation-delay: 180ms; }
+  .page-enter > *:nth-child(n + 5) { animation-delay: 240ms; }
+
+  /* A slow band of light across the balance card. */
+  .sheen {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(105deg, transparent 35%, rgb(235 232 225 / 0.06) 50%, transparent 65%);
+    background-size: 250% 100%;
+    animation: sheen 7s var(--ease-inout) infinite;
+  }
+
+  .wordmark-in > span {
+    display: inline-block;
+    animation: letter-in 900ms var(--ease-out) both;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    filter: blur(8px);
+    transform: translateY(14px);
+  }
+}
+
+@keyframes letter-in {
+  from {
+    opacity: 0;
+    filter: blur(12px);
+    transform: translateY(0.25em);
+  }
+}
+
+@keyframes live-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgb(61 220 151 / 0.5);
+  }
+  50% {
+    box-shadow: 0 0 0 5px rgb(61 220 151 / 0);
+  }
+}
+
+@keyframes sheen {
+  0% { background-position: 120% 0; }
+  60%,
+  100% { background-position: -120% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-enter > *,
+  .wordmark-in > span,
+  .live-dot,
+  .sheen {
+    animation: none;
   }
 }
