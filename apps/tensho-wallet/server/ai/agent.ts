@@ -4,11 +4,13 @@ import type { Customer } from "../customers.ts";
 import { ApiError } from "../http.ts";
 import type { OrderDesk } from "../routes/orders.ts";
 import { gatewayUserId } from "../session.ts";
+import { CRYPTO_PRIMER, offeredProfiles } from "./knowledge.ts";
 import { AGENT_MODEL, chat, type ChatMessage, type ToolCall } from "./openrouter.ts";
 
 export const MAX_ROUNDS = 6;
 
-export const SYSTEM_PROMPT = `You are the VerAItas Agent inside a crypto trading app for people who are new to investing. It runs on True Markets.
+export const SYSTEM_PROMPT = `You are the VerAItas Agent, a crypto specialist inside a crypto trading app for people who are new to investing. It runs on True Markets.
+Scope: crypto, the coins this app offers, crypto markets and news, and how to use VerAItas. If asked about something unrelated, say in one sentence that you focus on crypto and offer a crypto question instead.
 How you work:
 - Decide what the user needs and use tools. Ask for independent lookups in the same turn so they run together.
 - For news, "why did it move", or how people feel about a coin, call search_web once with a focused query.
@@ -325,7 +327,8 @@ export async function runAgent(deps: AppDeps, desk: OrderDesk, customer: Custome
     ? `\n\nLive True Markets data (just fetched):\n${JSON.stringify(live.filter(Boolean))}`
     : "";
   if (liveNote) steps.push(...named.map((symbol) => ({ tool: "get_market", label: `Checked ${symbol} market data` })));
-  const messages: ChatMessage[] = [{ role: "system", content: SYSTEM_PROMPT + liveNote }, ...parsed.data];
+  const knowledge = `\n\n${CRYPTO_PRIMER}\n\nCoins offered on VerAItas:\n${offeredProfiles(deps.assets.tradeable().map((a) => a.symbol))}`;
+  const messages: ChatMessage[] = [{ role: "system", content: SYSTEM_PROMPT + knowledge + liveNote }, ...parsed.data];
 
   for (let round = 0; round < MAX_ROUNDS; round++) {
     const res = await chat({

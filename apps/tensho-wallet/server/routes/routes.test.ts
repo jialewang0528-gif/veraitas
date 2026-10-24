@@ -946,3 +946,31 @@ describe("explain-book route", () => {
     expect(sent).toHaveLength(0);
   });
 });
+
+describe("agent crypto knowledge", () => {
+  let cookie: string;
+  let ai: typeof import("../ai/openrouter.ts").aiDeps;
+  let first: { messages: { role: string; content: string }[] } | undefined;
+
+  beforeEach(async () => {
+    ({ aiDeps: ai } = await import("../ai/openrouter.ts"));
+    ai.apiKey = () => "test-key";
+    first = undefined;
+    ai.fetch = vi.fn(async (_url: string, init?: RequestInit) => {
+      first ??= JSON.parse(String(init?.body));
+      return Response.json({ choices: [{ message: { content: "ok" } }] });
+    });
+    freshApp();
+    ({ cookie } = await signUp());
+  });
+
+  it("gives the agent the crypto primer, profiles of offered coins and a crypto-only scope", async () => {
+    await post("/api/agent/chat", { messages: [{ role: "user", content: "what is a stop-loss?" }] }, cookie);
+
+    const system = first!.messages[0]!.content;
+    expect(system).toContain("crypto specialist");
+    expect(system).toContain("Take-profit and stop-loss");
+    expect(system).toContain("- SOL: Solana's native coin");
+    expect(system).toContain("- PENGU: Token tied to the Pudgy Penguins");
+  });
+});
