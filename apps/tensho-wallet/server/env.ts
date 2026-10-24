@@ -18,6 +18,8 @@ const schema = z.object({
     ),
   PORT: z.coerce.number().int().positive().default(4747),
   DATA_FILE: z.string().default("data/customers.json"),
+  // The VerAItas Agent and tap-to-explain answer 503 without it; everything else works.
+  OPENROUTER_API_KEY: z.string().optional(),
 });
 
 type Env = z.infer<typeof schema>;

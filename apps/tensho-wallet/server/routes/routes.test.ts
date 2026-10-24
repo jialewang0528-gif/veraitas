@@ -728,3 +728,130 @@ describe("buy quote route", () => {
     expect(gateway.executeOrder).not.toHaveBeenCalled();
   });
 });
+
+describe("agent routes", () => {
+  let cookie: string;
+  let ai: typeof import("../ai/openrouter.ts").aiDeps;
+  let calls: { model: string; messages: { role: string }[]; tools?: unknown[]; plugins?: unknown[] }[];
+
+  const toolCall = (name: string, args: unknown, id = "c1") => ({
+    choices: [{ message: { content: null, tool_calls: [{ id, type: "function", function: { name, arguments: JSON.stringify(args) } }] } }],
+  });
+  const text = (content: string) => ({ choices: [{ message: { content } }] });
+
+  function script(...responses: (object | number)[]) {
+    calls = [];
+    const queue = [...responses];
+    ai.fetch = vi.fn(async (_url: string, init?: RequestInit) => {
+      calls.push(JSON.parse(String(init?.body)));
+      const next = queue.shift() ?? text("done");
+      return typeof next === "number" ? new Response("err", { status: next }) : Response.json(next);
+    });
+  }
+
+  beforeEach(async () => {
+    ({ aiDeps: ai } = await import("../ai/openrouter.ts"));
+    ai.apiKey = () => "test-key";
+    freshApp();
+    ({ cookie } = await signUp());
+  });
+
+  it("runs tools the model asks for and returns its answer with the steps", async () => {
+    script(toolCall("get_market", { symbol: "sol" }), text("SOL: $150.25."));
+
+    const res = await post("/api/agent/chat", { messages: [{ role: "user", content: "SOL price?" }] }, cookie);
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { reply: string; steps: { tool: string }[] };
+    expect(body.reply).toBe("SOL: $150.25.");
+    expect(body.steps.map((s) => s.tool)).toEqual(["get_market"]);
+    const toolResult = calls[1]!.messages.at(-1) as unknown as { role: string; content: string };
+    expect(toolResult.role).toBe("tool");
+    expect(JSON.parse(toolResult.content)).toMatchObject({ symbol: "SOL", price_usd: "150.25" });
+  });
+
+  it("searches the web through the web plugin and keeps the cited sources", async () => {
+    script(
+      toolCall("search_web", { query: "Solana news today" }),
+      {
+        choices: [
+          {
+            message: {
+              content: "- ETF outflows.\nSentiment: negative",
+              annotations: [{ type: "url_citation", url_citation: { url: "https://example.com/sol", title: "Example" } }],
+            },
+          },
+        ],
+      },
+      text("ETF outflows [Example]."),
+    );
+
+    const res = await post("/api/agent/chat", { messages: [{ role: "user", content: "Why is SOL down?" }] }, cookie);
+
+    const body = (await res.json()) as { sources: { url: string }[] };
+    expect(calls[1]!.plugins).toEqual([{ id: "web", max_results: 5 }]);
+    expect(body.sources).toEqual([{ url: "https://example.com/sol", title: "Example" }]);
+  });
+
+  it("prepares a trade for the user to confirm and never executes it", async () => {
+    script(toolCall("prepare_order", { symbol: "SOL", side: "buy", amount: 2 }), text("Prepared. Hold to confirm."));
+
+    const res = await post("/api/agent/chat", { messages: [{ role: "user", content: "buy $2 of SOL" }] }, cookie);
+
+    const body = (await res.json()) as { prepared: { order_id: string; side: string; amount: string } };
+    expect(body.prepared).toMatchObject({ order_id: "order-1", side: "buy", amount: "2" });
+    expect(gateway.executeOrder).not.toHaveBeenCalled();
+    // The prepared order is signable through the ticket's execute route.
+    expect((await post("/api/orders/order-1/execute", {}, cookie)).status).toBe(200);
+  });
+
+  it("returns tool errors to the model instead of failing", async () => {
+    script(toolCall("get_market", { symbol: "NOPE" }), text("NOPE is not offered."));
+
+    const res = await post("/api/agent/chat", { messages: [{ role: "user", content: "NOPE price" }] }, cookie);
+
+    expect(res.status).toBe(200);
+    expect(calls[1]!.messages.at(-1)).toMatchObject({ role: "tool" });
+    expect(JSON.stringify(calls[1]!.messages.at(-1))).toContain("not offered");
+  });
+
+  it("falls back to the second model once", async () => {
+    script(500, text("ok"));
+
+    const res = await post("/api/agent/chat", { messages: [{ role: "user", content: "hi" }] }, cookie);
+
+    expect(res.status).toBe(200);
+    expect(calls.map((c) => c.model)).toEqual(["x-ai/grok-4.7", "anthropic/claude-sonnet-5.5"]);
+  });
+
+  it("stops after the round limit", async () => {
+    script(...Array.from({ length: 10 }, (_, i) => toolCall("get_portfolio", {}, `c${i}`)));
+    gateway.portfolio.mockResolvedValue({ total_usd: "0", balances: [] } as unknown as Awaited<ReturnType<Gateway["portfolio"]>>);
+
+    const res = await post("/api/agent/chat", { messages: [{ role: "user", content: "loop" }] }, cookie);
+
+    expect(res.status).toBe(200);
+    expect(calls).toHaveLength(6);
+  });
+
+  it("answers 503 without a key and rejects malformed messages", async () => {
+    ai.apiKey = () => undefined;
+    script();
+    expect((await post("/api/agent/chat", { messages: [{ role: "user", content: "hi" }] }, cookie)).status).toBe(503);
+    ai.apiKey = () => "test-key";
+    expect((await post("/api/agent/chat", { messages: [] }, cookie)).status).toBe(400);
+    expect(calls).toHaveLength(0);
+  });
+
+  it("explains a tapped value once and serves repeats from the cache", async () => {
+    script(text("The fee is what True Markets charges for this trade."));
+    const body = { label: "Fee", value: "$0.004", context: "Before you buy, $2 of SOL" };
+
+    const first = await post("/api/agent/explain", body, cookie);
+    const second = await post("/api/agent/explain", body, cookie);
+
+    expect(await first.json()).toEqual({ text: "The fee is what True Markets charges for this trade." });
+    expect(second.status).toBe(200);
+    expect(calls).toHaveLength(1);
+  });
+});

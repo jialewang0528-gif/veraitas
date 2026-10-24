@@ -2,6 +2,7 @@ import { useState, type ReactNode } from "react";
 import { useSearchParams } from "react-router";
 import { isPriceMoved, useAssets, usePortfolio } from "../api.ts";
 import { Page } from "../components/AppShell.tsx";
+import { AgentPanel } from "../components/AgentPanel.tsx";
 import { MarketPanel } from "../components/MarketPanel.tsx";
 import { BeforeYouBuy } from "../components/BeforeYouBuy.tsx";
 import { useBeginnerMode } from "../beginner.tsx";
@@ -395,6 +396,7 @@ export function Trade() {
         <div className="grid flex-1 grid-cols-[minmax(0,1fr)_380px] items-start gap-5">
           <div className="flex min-w-0 flex-col gap-5">
             <MarketPanel token={token} />
+            <AgentPanel tokens={tokens} />
             <TokenList
               tokens={tokens}
               selected={token.symbol}
