@@ -912,3 +912,37 @@ describe("explain-move route", () => {
     expect((await post("/api/agent/explain-move", { asset_id: SOL.id, range: "1D", at: "yesterday" }, cookie)).status).toBe(400);
   });
 });
+
+describe("explain-book route", () => {
+  let cookie: string;
+  let ai: typeof import("../ai/openrouter.ts").aiDeps;
+  let sent: { messages: { content: string }[]; plugins?: unknown }[];
+
+  beforeEach(async () => {
+    ({ aiDeps: ai } = await import("../ai/openrouter.ts"));
+    ai.apiKey = () => "test-key";
+    sent = [];
+    ai.fetch = vi.fn(async (_url: string, init?: RequestInit) => {
+      sent.push(JSON.parse(String(init?.body)));
+      return Response.json({ choices: [{ message: { content: "More money is waiting to buy than to sell." } }] });
+    });
+    freshApp();
+    ({ cookie } = await signUp());
+  });
+
+  it("explains the book the page is showing, without a web search", async () => {
+    const body = { symbol: "SOL", best_bid: 101.1, best_ask: 101.12, spread_bps: 1.98, bid_depth_usd: 250000, ask_depth_usd: 180000 };
+
+    const res = await post("/api/agent/explain-book", body, cookie);
+
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ text: "More money is waiting to buy than to sell." });
+    expect(sent[0]!.plugins).toBeUndefined();
+    expect(sent[0]!.messages[1]!.content).toContain("Dollars waiting to buy in the top 10 levels: $250000");
+  });
+
+  it("rejects a malformed book", async () => {
+    expect((await post("/api/agent/explain-book", { symbol: "SOL", best_bid: -1 }, cookie)).status).toBe(400);
+    expect(sent).toHaveLength(0);
+  });
+});

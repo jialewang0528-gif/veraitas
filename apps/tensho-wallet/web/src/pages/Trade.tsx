@@ -6,6 +6,7 @@ import { TradeReceipt } from "../components/TradeReceipt.tsx";
 import { Page } from "../components/AppShell.tsx";
 import { AgentPanel } from "../components/AgentPanel.tsx";
 import { MarketPanel } from "../components/MarketPanel.tsx";
+import { OrderBook } from "../components/OrderBook.tsx";
 import { BeforeYouBuy } from "../components/BeforeYouBuy.tsx";
 import { useBeginnerMode } from "../beginner.tsx";
 import {
@@ -506,6 +507,7 @@ export function Trade() {
               position={position}
               cash={cash}
             />
+            <OrderBook symbol={token.symbol} />
             <Card className="flex flex-col gap-4 p-[22px]">
               <h2 className="m-0 font-display text-[18px] leading-none font-bold">
                 Your {token.symbol}

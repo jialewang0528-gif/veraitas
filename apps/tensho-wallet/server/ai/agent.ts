@@ -380,3 +380,6 @@ export const EXPLAIN_PROMPT =
 
 export const MOVE_PROMPT =
   "A beginner clicked one point on a crypto price chart. Using the numbers given and any news you find, explain that move in at most 3 short sentences and 70 words, in plain words a 15-year-old understands (explain any finance term in the same sentence): what the price did around that point, the most likely reason if the news supports one (otherwise say no clear news), and whether it looks like a good sign, a bad sign or unclear for someone holding the coin, and why. Refer to the moment as \"this point\" and do not state clock times or time zones. Never tell them to buy, sell or hold, and never predict prices. Cite a source as [site] if you use one. No emoji.";
+
+export const BOOK_PROMPT =
+  "A beginner is looking at a live crypto order book. Using only the numbers given, explain it in at most 4 short sentences and 80 words, in plain words a 15-year-old understands: what the bids (people waiting to buy) and asks (people waiting to sell) are, what this spread means for them in dollars if they buy and sell right away, and whether buyers or sellers have more money waiting right now and whether that leans good, bad or neutral for the price in the next few minutes. Never tell them to buy, sell or hold, and never predict prices beyond saying which way the waiting orders lean. No emoji.";
