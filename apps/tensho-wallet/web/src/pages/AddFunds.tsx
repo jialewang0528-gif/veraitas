@@ -23,7 +23,7 @@ function WalletCard({ wallet }: { wallet: Wallet }) {
   return (
     <Card className="flex items-center gap-7 p-7">
       <div className="shrink-0 rounded-[14px] bg-text p-3">
-        <QRCodeSVG value={wallet.address} size={152} bgColor="#EBE8E1" fgColor="#060510" title={`${chain.name} address QR code`} />
+        <QRCodeSVG value={wallet.address} size={152} bgColor="#EBE8E1" fgColor="#05060a" title={`${chain.name} address QR code`} />
       </div>
       <div className="flex min-w-0 flex-col gap-3.5">
         <div className="flex items-center gap-2.5">

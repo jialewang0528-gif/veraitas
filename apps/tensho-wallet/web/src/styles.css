@@ -1,22 +1,23 @@
 @import "tailwindcss";
 
-/* Blue-black chrome with an indigo accent, after Fomo's palette. Green and orange-red carry gains and losses;
-   the remaining hues are for information only: statuses, transaction kinds, token tiles, warnings. */
+/* Trading-terminal palette: a cool near-black base with 8% white hairlines (after True Markets), one electric
+   blue accent that is solid only on the main action and a tint everywhere else, and mint and rose for gains and
+   losses, also used as tints on buy and sell controls. Other hues carry information only. */
 @theme {
-  --color-ink: #060510;
-  --color-night: #04030c;
-  --color-panel: #12111a;
-  --color-edge: #262535;
-  --color-line: #1b1a27;
-  --color-text: #f7f7f7;
-  --color-muted: #9899a3;
-  --color-faint: #737684;
-  --color-accent: #516af6;
-  --color-accent-strong: #4356ff;
+  --color-ink: #05060a;
+  --color-night: #030407;
+  --color-panel: #0c0e15;
+  --color-edge: #1f2433;
+  --color-line: #151926;
+  --color-text: #f5f6f8;
+  --color-muted: #8e929f;
+  --color-faint: #6c7182;
+  --color-accent: #5b7cff;
+  --color-accent-strong: #4a6af0;
   --color-cyan: #45e3ff;
   --color-pink: #ff4fa3;
-  --color-up: #21c95e;
-  --color-down: #ff622e;
+  --color-up: #3fcf85;
+  --color-down: #f04a63;
   --color-amber: #f9e45b;
   --color-violet: #b78cff;
   --color-warn-bg: #1e1510;
@@ -25,7 +26,7 @@
   --color-warn-text: #f4e3cf;
 
   --font-display: "Unbounded", sans-serif;
-  --font-sans: "DM Sans", system-ui, sans-serif;
+  --font-sans: "Inter", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
 
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
@@ -110,7 +111,7 @@
     position: absolute;
     inset: 0;
     pointer-events: none;
-    background: linear-gradient(105deg, transparent 35%, rgb(81 106 246 / 0.09) 50%, transparent 65%);
+    background: linear-gradient(105deg, transparent 35%, rgb(91 124 255 / 0.08) 50%, transparent 65%);
     background-size: 250% 100%;
     animation: sheen 7s var(--ease-inout) infinite;
   }
@@ -140,10 +141,10 @@
 @keyframes live-pulse {
   0%,
   100% {
-    box-shadow: 0 0 0 0 rgb(33 201 94 / 0.5);
+    box-shadow: 0 0 0 0 rgb(63 207 133 / 0.5);
   }
   50% {
-    box-shadow: 0 0 0 5px rgb(33 201 94 / 0);
+    box-shadow: 0 0 0 5px rgb(63 207 133 / 0);
   }
 }
 

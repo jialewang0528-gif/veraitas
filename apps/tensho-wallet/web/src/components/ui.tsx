@@ -11,7 +11,7 @@ const BUTTON_BASE =
 // Primary is an ink fill that empties on hover; secondary is an outline that fills. Same move as the portfolio.
 const BUTTON_VARIANT: Record<Variant, string> = {
   primary: "border-accent bg-accent text-white hover:border-accent-strong hover:bg-accent-strong",
-  secondary: "border-edge bg-transparent text-text hover:border-accent hover:bg-accent/15",
+  secondary: "border-edge bg-white/[0.03] text-text hover:border-accent/60 hover:bg-accent/10",
 };
 
 function buttonClass(variant: Variant = "primary", extra = ""): string {
@@ -52,7 +52,7 @@ export function DetailRow({ label, value, last = false }: { label: string; value
 }
 
 export function Card({ className = "", children }: { className?: string; children: ReactNode }) {
-  return <section className={`rounded-[14px] border border-edge bg-panel ${className}`}>{children}</section>;
+  return <section className={`rounded-[12px] border border-white/[0.08] bg-panel ${className}`}>{children}</section>;
 }
 
 export function Mono({ className = "", children }: { className?: string; children: ReactNode }) {

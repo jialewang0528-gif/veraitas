@@ -27,8 +27,8 @@ const RANGE_LABEL: Record<ChartRange, string> = {
   "1M": "past month",
 };
 
-const UP = "#21c95e";
-const DOWN = "#ff622e";
+const UP = "#3fcf85";
+const DOWN = "#f04a63";
 
 function PriceChart({
   points,
@@ -53,12 +53,12 @@ function PriceChart({
       autoSize: true,
       layout: {
         background: { type: ColorType.Solid, color: "transparent" },
-        textColor: "#737684",
-        fontFamily: "DM Sans, system-ui, sans-serif",
+        textColor: "#6c7182",
+        fontFamily: "Inter, system-ui, sans-serif",
         fontSize: 11,
         attributionLogo: false,
       },
-      grid: { vertLines: { visible: false }, horzLines: { color: "#15141f" } },
+      grid: { vertLines: { visible: false }, horzLines: { color: "#11141d" } },
       rightPriceScale: {
         borderVisible: false,
         scaleMargins: { top: 0.12, bottom: 0.08 },
@@ -69,12 +69,12 @@ function PriceChart({
         vertLine: {
           color: "#4a4c5c",
           style: LineStyle.Dashed,
-          labelBackgroundColor: "#262535",
+          labelBackgroundColor: "#1f2433",
         },
         horzLine: {
           color: "#4a4c5c",
           style: LineStyle.Dashed,
-          labelBackgroundColor: "#262535",
+          labelBackgroundColor: "#1f2433",
         },
       },
       handleScale: false,
@@ -107,7 +107,7 @@ function PriceChart({
       priceLineColor: color,
       priceLineStyle: LineStyle.Dotted,
       crosshairMarkerBorderColor: color,
-      crosshairMarkerBackgroundColor: "#060510",
+      crosshairMarkerBackgroundColor: "#05060a",
       priceFormat: {
         type: "custom",
         formatter: (price: number) => usd(price),
@@ -323,7 +323,7 @@ export function MarketPanel({ token }: { token: AssetRow }) {
               onClick={() => setRange(r)}
               className={`h-8 cursor-pointer rounded-full border px-3.5 text-[11px] font-bold tracking-[0.1em] transition-colors duration-200 ${
                 range === r
-                  ? "border-accent bg-accent text-white"
+                  ? "border-accent/60 bg-accent/15 text-text"
                   : "border-edge bg-transparent text-muted hover:border-faint hover:text-text"
               }`}
             >
