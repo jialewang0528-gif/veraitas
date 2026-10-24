@@ -8,7 +8,6 @@ import { AppShell } from "./components/AppShell.tsx";
 import { Activity } from "./pages/Activity.tsx";
 import { AddFunds } from "./pages/AddFunds.tsx";
 import { Home } from "./pages/Home.tsx";
-import { ReceiptFirst } from "./pages/ReceiptFirst.tsx";
 import { Send } from "./pages/Send.tsx";
 import { SignIn } from "./pages/SignIn.tsx";
 import { SignUp } from "./pages/SignUp.tsx";
@@ -38,7 +37,6 @@ createRoot(document.getElementById("root")!).render(
             <Route index element={<Home />} />
             <Route path="/trade" element={<Trade />} />
             <Route path="/swing-check" element={<SwingCheck />} />
-            <Route path="/receipt" element={<ReceiptFirst />} />
             <Route path="/add-funds" element={<AddFunds />} />
             <Route path="/send" element={<Send />} />
             <Route path="/activity" element={<Activity />} />

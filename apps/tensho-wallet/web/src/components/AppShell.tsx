@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Activity, ArrowLeftRight, House, LogOut, Plus, Receipt, Send, Waves, type LucideIcon } from "lucide-react";
+import { Activity, ArrowLeftRight, House, LogOut, Plus, Send, Waves, type LucideIcon } from "lucide-react";
 import type { FormEvent, ReactNode } from "react";
 import { Navigate, NavLink, Outlet, useNavigate } from "react-router";
 import { api, ApiError, useMe } from "../api.ts";
@@ -13,7 +13,6 @@ const NAV: { to: string; label: string; icon: LucideIcon; beginner?: true }[] = 
   { to: "/", label: "Home", icon: House },
   { to: "/trade", label: "Trade", icon: ArrowLeftRight },
   { to: "/swing-check", label: "Swing Check", icon: Waves, beginner: true },
-  { to: "/receipt", label: "Receipt First", icon: Receipt, beginner: true },
   { to: "/add-funds", label: "Add funds", icon: Plus },
   { to: "/send", label: "Send", icon: Send },
   { to: "/activity", label: "Activity", icon: Activity },
@@ -105,9 +104,11 @@ export function AppShell() {
         </div>
       </aside>
       <main className="flex min-w-0 flex-1 flex-col overflow-y-auto">
-        <div className="sticky top-0 z-20">
-          <TickerTape />
-        </div>
+        {!beginner && (
+          <div className="sticky top-0 z-20">
+            <TickerTape />
+          </div>
+        )}
         <div className="page-enter flex flex-1 flex-col gap-5 px-8 py-6">
           <Outlet />
         </div>

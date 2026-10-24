@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useSearchParams } from "react-router";
 import { api, isPriceMoved, useAssets, usePortfolio } from "../api.ts";
 import { Explainable } from "../components/Explain.tsx";
+import { TradeReceipt } from "../components/TradeReceipt.tsx";
 import { Page } from "../components/AppShell.tsx";
 import { AgentPanel } from "../components/AgentPanel.tsx";
 import { MarketPanel } from "../components/MarketPanel.tsx";
@@ -156,6 +157,7 @@ function Ticket({
   const status = settlement.data?.status;
   const [autoSell, setAutoSell] = useState<AutoSell>(null);
   const [autoSellNote, setAutoSellNote] = useState<string>();
+  const [receiptClosed, setReceiptClosed] = useState<string | null>(null);
   const planned = useRef<string | null>(null);
 
   // Once a buy fills, hand the auto-sell choice to the server watcher; the fill itself is read from True Markets.
@@ -214,9 +216,11 @@ function Ticket({
             aria-pressed={side === s}
             disabled={flow !== null}
             onClick={() => onSide(s)}
-            className={`h-[42px] cursor-pointer rounded-[10px] border-none text-[15px] font-bold capitalize ${
+            className={`h-[42px] cursor-pointer rounded-[10px] border-none text-[15px] font-bold capitalize transition-colors duration-200 ${
               side === s
-                ? "bg-accent text-white"
+                ? s === "buy"
+                  ? "bg-up/15 text-up"
+                  : "bg-down/15 text-down"
                 : "bg-transparent text-muted hover:text-text"
             }`}
           >
@@ -312,7 +316,11 @@ function Ticket({
                 onClick={() => setAutoSell(value)}
                 className={`h-8 cursor-pointer rounded-full border px-3 text-[11px] font-bold transition-colors duration-200 disabled:cursor-not-allowed disabled:opacity-40 ${
                   autoSell === value
-                    ? "border-accent bg-accent text-white"
+                    ? value === null
+                      ? "border-accent/60 bg-accent/15 text-text"
+                      : value > 0
+                        ? "border-up/50 bg-up/15 text-up"
+                        : "border-down/50 bg-down/15 text-down"
                     : `border-edge bg-transparent hover:border-faint ${value === null ? "text-muted" : value > 0 ? "text-up" : "text-down"}`
                 }`}
               >
@@ -380,6 +388,14 @@ function Ticket({
       )}
 
       {autoSellNote && <p className="m-0 text-xs text-muted">{autoSellNote}</p>}
+      {beginner && status === "complete" && settlement.data && receiptClosed !== settlement.data.order_id && (
+        <TradeReceipt
+          order={settlement.data}
+          symbol={token.symbol}
+          chartPrice={token.price === null ? null : Number(token.price)}
+          onClose={() => setReceiptClosed(settlement.data?.order_id ?? null)}
+        />
+      )}
       {flow ? (
         <SettlementNotice
           state={flow}
