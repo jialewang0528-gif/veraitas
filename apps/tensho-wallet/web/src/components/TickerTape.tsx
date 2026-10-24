@@ -12,7 +12,7 @@ export function TickerTape() {
   const items = tokens.map((t) => (
     <Link
       key={t.asset_id}
-      to={`/trade?asset=${encodeURIComponent(t.asset_id)}&side=buy`}
+      to={`/trade?asset=${encodeURIComponent(t.asset_id)}`}
       className="flex shrink-0 items-center gap-2 px-4 text-[12px] text-text no-underline hover:bg-line hover:text-text"
     >
       <span className="font-bold tracking-[0.04em]">{t.symbol}</span>

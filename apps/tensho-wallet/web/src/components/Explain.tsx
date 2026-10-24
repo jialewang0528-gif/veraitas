@@ -20,17 +20,19 @@ export function Explainable({
 }) {
   const { beginner } = useBeginnerMode();
   const [open, setOpen] = useState(false);
+  // Freeze what was tapped, so live price ticks don't re-ask the agent while the popover is open.
+  const [asked, setAsked] = useState<{ label: string; value: string; context: string } | null>(null);
   const root = useRef<HTMLSpanElement>(null);
   const popoverId = useId();
 
   const explain = useQuery({
-    queryKey: ["explain", label, value, context],
+    queryKey: ["explain", asked],
     queryFn: () =>
       api<{ text: string }>("/api/agent/explain", {
         method: "POST",
-        body: { label, value, context },
+        body: asked!,
       }),
-    enabled: open,
+    enabled: open && asked !== null,
     staleTime: 60_000,
     retry: false,
   });
@@ -50,6 +52,7 @@ export function Explainable({
 
   if (!beginner) return <>{children}</>;
 
+
   return (
     <span ref={root} className="relative inline-flex">
       <button
@@ -57,7 +60,10 @@ export function Explainable({
         aria-expanded={open}
         aria-controls={popoverId}
         aria-label={`Explain ${label}`}
-        onClick={() => setOpen((o) => !o)}
+        onClick={() => {
+          if (!open) setAsked({ label, value, context });
+          setOpen((o) => !o);
+        }}
         className="cursor-help border-none bg-transparent p-0 text-left text-inherit decoration-faint decoration-dotted underline-offset-4 hover:underline"
       >
         {children}
