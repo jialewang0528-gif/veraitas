@@ -3,6 +3,8 @@ import { useSearchParams } from "react-router";
 import { isPriceMoved, useAssets, usePortfolio } from "../api.ts";
 import { Page } from "../components/AppShell.tsx";
 import { MarketPanel } from "../components/MarketPanel.tsx";
+import { BeforeYouBuy } from "../components/BeforeYouBuy.tsx";
+import { useBeginnerMode } from "../beginner.tsx";
 import {
   AssetTile,
   Banner,
@@ -148,6 +150,9 @@ function Ticket({
   }
 
   const buy = side === "buy";
+  const { beginner } = useBeginnerMode();
+  // Beginner Mode swaps the quote box and Confirm for the Before You Buy card on buys.
+  const guided = beginner && buy && isPositiveDecimal(settled);
   const available = buy ? cash?.available : position?.available;
   const decimals = buy ? 2 : (position?.decimals ?? 6);
   const q = quote.data?.quote;
@@ -241,38 +246,40 @@ function Ticket({
         </Chip>
       </div>
 
-      <div className="rounded-[14px] border border-edge bg-ink px-4 py-0.5">
-        <DetailRow
-          label="You get (est.)"
-          value={
-            q
-              ? buy
-                ? tokenAmount(q.qty_out, token.symbol)
-                : `${usd(q.qty_out)} USDC`
-              : "—"
-          }
-        />
-        <DetailRow
-          label="Price"
-          value={
-            priceEach === null ? "—" : `${usd(priceEach)} / ${token.symbol}`
-          }
-        />
-        <DetailRow label="Network fee" value="Covered by VerAItas" />
-        {q && Number(q.fee) > 0 && (
+      {!guided && (
+        <div className="rounded-[14px] border border-edge bg-ink px-4 py-0.5">
           <DetailRow
-            label="Fee"
-            value={`${tokenAmount(q.fee)} ${q.fee_asset}`}
+            label="You get (est.)"
+            value={
+              q
+                ? buy
+                  ? tokenAmount(q.qty_out, token.symbol)
+                  : `${usd(q.qty_out)} USDC`
+                : "—"
+            }
           />
-        )}
-        <p className="m-0 py-2.5 text-xs text-faint">
-          {quote.data ? (
-            <QuoteAge preparedAt={quote.data.prepared_at} />
-          ) : (
-            quoteHint(quote.isFetching, quote.isError)
+          <DetailRow
+            label="Price"
+            value={
+              priceEach === null ? "—" : `${usd(priceEach)} / ${token.symbol}`
+            }
+          />
+          <DetailRow label="Network fee" value="Covered by VerAItas" />
+          {q && Number(q.fee) > 0 && (
+            <DetailRow
+              label="Fee"
+              value={`${tokenAmount(q.fee)} ${q.fee_asset}`}
+            />
           )}
-        </p>
-      </div>
+          <p className="m-0 py-2.5 text-xs text-faint">
+            {quote.data ? (
+              <QuoteAge preparedAt={quote.data.prepared_at} />
+            ) : (
+              quoteHint(quote.isFetching, quote.isError)
+            )}
+          </p>
+        </div>
+      )}
 
       {quote.error && !executeError && (
         <Banner tone="error">{quote.error.message}</Banner>
@@ -310,6 +317,14 @@ function Ticket({
           }
           explorerUrl={settlement.data?.explorer_url}
           onDone={done}
+        />
+      ) : guided ? (
+        <BeforeYouBuy
+          token={token}
+          spend={Number(settled)}
+          quote={q}
+          canConfirm={canConfirm && amount === settled}
+          onConfirm={confirm}
         />
       ) : (
         <Button

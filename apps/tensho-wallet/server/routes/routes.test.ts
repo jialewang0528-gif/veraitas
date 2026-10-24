@@ -685,7 +685,7 @@ describe("exit quote route", () => {
     const res = await post("/api/orders/exit-quote", { asset_id: SOL.id, qty: "0.1" }, cookie);
 
     expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({ qty_out: "9.94", fee: "0.02", fee_asset: "USDC", issues: ["Insufficient balance"] });
+    expect(await res.json()).toEqual({ qty: "0.1", qty_out: "9.94", fee: "0.02", fee_asset: "USDC", issues: ["Insufficient balance"] });
     expect(gateway.createOrder.mock.calls[0]![1]).toMatchObject({ asset_id: SOL.id, side: "sell", qty: "0.1", qty_unit: "base" });
     expect(gateway.executeOrder).not.toHaveBeenCalled();
   });
@@ -694,5 +694,37 @@ describe("exit quote route", () => {
     expect((await post("/api/orders/exit-quote", { asset_id: SOL.id, qty: "-1" }, cookie)).status).toBe(400);
     expect((await post("/api/orders/exit-quote", { asset_id: USDC.id, qty: "1" }, cookie)).status).toBe(400);
     expect(gateway.createOrder).not.toHaveBeenCalled();
+  });
+});
+
+describe("buy quote route", () => {
+  let cookie: string;
+
+  beforeEach(async () => {
+    freshApp();
+    ({ cookie } = await signUp());
+  });
+
+  it("prices a buy for an unfunded wallet from the informational quote", async () => {
+    gateway.createOrder.mockResolvedValueOnce({
+      order_id: "",
+      status: "",
+      quote: {
+        base_asset: SOL.address!,
+        quote_asset: USDC.address!,
+        qty: "2",
+        qty_out: "0.0199",
+        fee: "0.004",
+        fee_asset: USDC.address!,
+        issues: ["Insufficient balance"],
+      },
+    });
+
+    const res = await post("/api/orders/buy-quote", { asset_id: SOL.id, amount: "2" }, cookie);
+
+    expect(res.status).toBe(200);
+    expect(await res.json()).toMatchObject({ qty_out: "0.0199", fee: "0.004", fee_asset: "USDC" });
+    expect(gateway.createOrder.mock.calls[0]![1]).toMatchObject({ side: "buy", qty: "2", qty_unit: "quote" });
+    expect(gateway.executeOrder).not.toHaveBeenCalled();
   });
 });
