@@ -1,20 +1,52 @@
-# True Markets examples
+# VerAItas
 
-Apps built on the True Markets APIs the way a client would build them. Each folder is a self-contained project with its own README, dependencies and setup.
+**Trading, said plainly.** VerAItas helps someone who has never traded answer three questions before they tap buy:
 
-- `starters/` hold the smallest working setup for one API, to copy and build on.
-- `apps/` hold complete apps that show several APIs working together.
+1. **How much could I lose?** Swing Check
+2. **What am I really paying?** Receipt First
+3. **When will I sell?** Exit Ticket
 
-| Example | What it shows |
-| --- | --- |
-| [apps/tensho-wallet](apps/tensho-wallet/) | A neobank on the gateway APIs: sign up with embedded wallets, market buy and sell on Solana and Base, sends to external wallets, and activity |
+Built at the NYU Shipyard buildathon for the Fintech Builder track, on the [True Markets Gateway API](https://docs.truemarkets.co/gateway). Trades are real: tokens on Solana and Base, settled in USDC.
 
-## Before you run one
+## The three screens
 
-You need a True Markets organization and an API key downloaded from the developer console. Each example says where to put it; keys stay on your machine and are never committed.
+### Swing Check
+Beginners see "SOL -4%" and don't know what that means for their money. Type an amount and pick a token, and Swing Check turns the last 30 days of True Markets prices into dollars:
 
-There is no sandbox. Wallets these examples create hold real funds, and a signer key that seats a funded wallet must be backed up, because losing it locks that wallet for good.
+> On a normal day, your $20.00 moves about $0.19 up or down. On the worst day this month, your $20.00 would have dropped to $18.84.
 
-## Adding an example
+A bar for each day shows that day's gain or loss on your amount. Nothing is bought on this screen.
 
-Put it under `starters/` or `apps/` in its own folder with a README, its own dependencies and a `.gitignore` that keeps keys and local state out of git. Use public APIs only, and make its tests run without real keys or network access. Add its path to the matrix in `.github/workflows/ci.yml`.
+### Receipt First
+The price on the chart is not the price you pay. When you buy right away, you pay what the cheapest seller asks, which sits a bit above the chart price. Receipt First shows a receipt before you buy, with **You pay, Market price, Your price, You get and Hidden cost**, refreshed from a live quote every 10 seconds. After the order fills, a second receipt shows what you actually got.
+
+### Exit Ticket
+Most first-time traders buy with no plan to sell. On Exit Ticket the Buy button stays locked until you pick a target: **+5%, +10% or +20%**. After the buy fills, VerAItas saves a sell plan from the real fill price and sells automatically once the price reaches your target. You can cancel a plan while it is still watching.
+
+True Markets rests limit orders on its exchange and on Hyperliquid, but not on Solana or Base, so the VerAItas server watches the price every 15 seconds and sells at market when the target is hit. Plans only run while the server is running.
+
+## Guardrails
+
+- Every buy is capped at **$5** on the server, whatever the browser sends.
+- The server only signs payloads True Markets returned, never anything from the browser.
+- The API key and the wallet signer key stay on your machine and are never committed.
+
+## Run it
+
+The app lives in [`apps/tensho-wallet`](apps/tensho-wallet/). The folder kept its original name so existing clones keep working.
+
+```bash
+cd apps/tensho-wallet
+npm install
+# put the API key JSON from the True Markets developer console in .secrets/
+npm run dev
+```
+
+Then open http://localhost:5173. You need Node 22 or newer. [The app README](apps/tensho-wallet/README.md) covers setup, how the True Markets calls work, and the warnings to read before funding a wallet.
+
+> [!WARNING]
+> There is no sandbox. Every order moves real money. Back up `data/wallet-signer-key` before you fund anything, because losing it locks every wallet the app created.
+
+## Credits
+
+VerAItas started from Tensho Wallet, the neobank example in [true-markets/examples](https://github.com/true-markets/examples). We renamed and restyled it, added a live price chart, and built the three beginner screens on top.

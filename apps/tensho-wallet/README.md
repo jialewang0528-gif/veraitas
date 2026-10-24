@@ -1,12 +1,14 @@
-# Tensho Wallet
+# VerAItas
 
-Tensho is a demo neobank on True Markets rails. Customers sign up with an email and password, get a wallet without ever seeing a seed phrase, fund it by sending USDC to the address the app shows, buy and sell a set of Solana and Base tokens, send tokens to any external wallet, and see their own activity.
+VerAItas is a beginner trading app on True Markets rails, started from the Tensho Wallet example. On top of the original wallet, it adds three screens for first-time traders: Swing Check, Receipt First and Exit Ticket.
 
-Tensho uses the True Markets gateway exactly the way any outside client would. Its server holds an organization API key and a signer key, maps each Tensho customer to a gateway user, and makes every True Markets call on that customer's behalf. The browser only ever talks to Tensho's own server and never sees a True Markets credential.
+Customers sign up with an email and password, get a wallet without ever seeing a seed phrase, fund it by sending USDC to the address the app shows, buy and sell a set of Solana and Base tokens, send tokens to any external wallet, and see their own activity.
+
+VerAItas uses the True Markets gateway exactly the way any outside client would. Its server holds an organization API key and a signer key, maps each customer to a gateway user, and makes every True Markets call on that customer's behalf. The browser only ever talks to the VerAItas server and never sees a True Markets credential.
 
 > [!WARNING]
-> - **One signer key seats every customer's wallet.** Tensho creates it on first start at `data/wallet-signer-key`. If you delete or lose that file, every wallet it seated is locked for good. Back it up before you fund anything.
-> - **There is no sandbox.** Trades and sends move real funds on Solana mainnet.
+> - **One signer key seats every customer's wallet.** VerAItas creates it on first start at `data/wallet-signer-key`. If you delete or lose that file, every wallet it seated is locked for good. Back it up before you fund anything.
+> - **There is no sandbox.** Trades and sends move real funds on Solana mainnet. Buys are capped at $5 on the server.
 > - **Funding means sending tokens to the address the app shows.** There is no card or bank deposit.
 
 ## Requirements
@@ -17,8 +19,8 @@ Tensho uses the True Markets gateway exactly the way any outside client would. I
 ## Setup
 
 1. Install dependencies with `npm install`.
-2. Move the API key you downloaded from the developer console into `.secrets/`. Everything in that folder is gitignored and kept out of the Docker image, and Tensho finds the key on its own. To keep it somewhere else, set `TM_API_KEY_PATH` to the file.
-That's all the setup. Tensho talks to https://api.truemarkets.co, creates the wallet signer key on first start and reads your organization id from the API key's token. Optional overrides go in a `.env` file: `TM_TOKENS` (the tokens offered for trading, comma-separated, `SYMBOL` for Solana or `SYMBOL@base` for Base; the default is 16 Solana and 4 Base tokens) and `PORT` (default `4747`). Tensho keeps its state in `data/` (customers, session secret and the wallet signer key); delete that folder to start over, but only once no wallet it created holds funds.
+2. Move the API key you downloaded from the developer console into `.secrets/`. Everything in that folder is gitignored and kept out of the Docker image, and VerAItas finds the key on its own. To keep it somewhere else, set `TM_API_KEY_PATH` to the file.
+That's all the setup. VerAItas talks to https://api.truemarkets.co, creates the wallet signer key on first start and reads your organization id from the API key's token. Optional overrides go in a `.env` file: `TM_TOKENS` (the tokens offered for trading, comma-separated, `SYMBOL` for Solana or `SYMBOL@base` for Base; the default is 16 Solana and 4 Base tokens) and `PORT` (default `4747`). VerAItas keeps its state in `data/` (customers, session secret, wallet signer key and Exit Ticket sell plans). Delete that folder to start over, but only once no wallet it created holds funds.
 
 ## Run
 
@@ -49,11 +51,19 @@ Token prices come from `/v1/defi/market/prices/history`, polled every 15 seconds
 
 Prepared quotes live in the server's memory, so running two server instances, or restarting between reviewing and confirming a trade, asks the customer to review the quote again.
 
+## The beginner screens
+
+- **Swing Check** (`web/src/pages/SwingCheck.tsx`, math in `web/src/swing.ts`) reads 30 days of prices through the existing `/api/market/:asset_id?range=1M` route, keeps the last price of each day, and shows the median daily move and the worst day in dollars on the amount entered. It places no orders.
+- **Receipt First** (`web/src/pages/ReceiptFirst.tsx`) prepares a buy through `POST /api/orders` like the trade ticket, refreshes it every 10 seconds, and compares the quote with the polled market price. Hidden cost is what you pay minus what the tokens you get are worth at the market price. After the order fills, a second receipt comes from the order's executed quantity and average price.
+- **Exit Ticket** (`web/src/pages/ExitTicket.tsx`, server in `server/exits.ts` and `server/routes/exits.ts`) keeps Buy disabled until the customer picks +5%, +10% or +20%. After the buy fills, `POST /api/exit-plans` reads the order from True Markets, so the fill price and quantity never come from the browser, and saves a plan to `data/exit-plans.json`. True Markets doesn't rest limit orders on Solana or Base, so a watcher checks the polled price every 15 seconds and, once it reaches the target, places a market sell for the filled quantity through the same prepare, sign and execute flow. `POST /api/exit-plans/:id/cancel` stops a plan that is still watching. The watcher only runs while the server does.
+
+Buys over $5 are rejected in `server/routes/orders.ts` before anything reaches True Markets.
+
 ## What it deliberately doesn't do
 
-- Deposits don't appear in Activity; they show up as balance changes only.
-- No limit orders, fiat on or off ramps, webhooks or streaming prices. Trading covers Solana and Base only.
+- Deposits don't appear in Activity. They show up as balance changes only.
+- No limit orders, fiat on or off ramps, webhooks or streaming prices. Exit Ticket sells at market once its target is reached. Trading covers Solana and Base only.
 - No fee breakdown beyond what the quote returns.
 - No signer key rotation.
-- No organization or API key registration inside the app; that is the developer console's job.
+- No organization or API key registration inside the app. That is the developer console's job.
 - No production hardening: no rate limiting, no HTTPS termination and no shared state across instances.
