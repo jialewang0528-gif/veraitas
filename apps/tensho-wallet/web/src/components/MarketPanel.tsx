@@ -17,6 +17,7 @@ import { useBeginnerMode } from "../beginner.tsx";
 import { richText } from "../rich.tsx";
 import { compactUsd, usd } from "../format.ts";
 import type { AssetRow, ChartRange, MarketData } from "../types.ts";
+import { Explainable } from "./Explain.tsx";
 import { AssetTile, Card, Label, Mono, PriceChange, Spinner } from "./ui.tsx";
 
 const RANGES: ChartRange[] = ["1H", "1D", "1W", "1M"];
@@ -154,16 +155,30 @@ function PriceChart({
   return (
     <div
       ref={container}
-      className={`h-[340px] w-full ${onPick ? "cursor-crosshair" : ""}`}
+      className={`h-[220px] w-full ${onPick ? "cursor-crosshair" : ""}`}
     />
   );
 }
 
-function StatItem({ label, value }: { label: string; value: string }) {
+function StatItem({
+  label,
+  value,
+  symbol,
+}: {
+  label: string;
+  value: string;
+  symbol: string;
+}) {
   return (
     <div className="flex flex-col gap-1.5">
       <Label>{label}</Label>
-      <Mono className="text-[15px] font-medium">{value}</Mono>
+      <Explainable
+        label={`${symbol} ${label}`}
+        value={value}
+        context={`${symbol} on the Trade page of a beginner crypto app`}
+      >
+        <Mono className="text-[15px] font-medium">{value}</Mono>
+      </Explainable>
     </div>
   );
 }
@@ -239,7 +254,15 @@ function MoveExplainer({
   );
 }
 
-export function MarketPanel({ token }: { token: AssetRow }) {
+export function MarketPanel({
+  token,
+  tokens = [],
+  onSelect,
+}: {
+  token: AssetRow;
+  tokens?: AssetRow[];
+  onSelect?: (assetId: string) => void;
+}) {
   const [range, setRange] = useState<ChartRange>("1D");
   const { beginner } = useBeginnerMode();
   const [picked, setPicked] = useState<string>();
@@ -256,8 +279,8 @@ export function MarketPanel({ token }: { token: AssetRow }) {
   const stats = market.data?.stats;
 
   return (
-    <Card className="flex flex-col gap-5 p-6">
-      <div className="flex flex-wrap items-start justify-between gap-6">
+    <Card className="flex shrink-0 flex-col gap-3 p-5">
+      <div className="flex flex-wrap items-start justify-between gap-5">
         <div className="flex items-center gap-3.5">
           <AssetTile symbol={token.symbol} icon={token.icon} size={44} />
           <div className="flex flex-col gap-1">
@@ -265,22 +288,63 @@ export function MarketPanel({ token }: { token: AssetRow }) {
               <h2 className="m-0 font-display text-[22px] leading-none font-bold">
                 {token.name}
               </h2>
-              <span className="text-sm text-muted">{token.symbol}</span>
+              {onSelect && tokens.length > 1 ? (
+                <select
+                  aria-label="Token"
+                  value={token.asset_id}
+                  onChange={(e) => onSelect(e.target.value)}
+                  className="h-7 cursor-pointer rounded-full border border-edge bg-white/[0.03] px-2.5 text-xs text-text outline-none hover:border-faint"
+                >
+                  {tokens.map((t) => (
+                    <option
+                      key={t.asset_id}
+                      value={t.asset_id}
+                      className="bg-panel"
+                    >
+                      {t.symbol}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <span className="text-sm text-muted">{token.symbol}</span>
+              )}
             </div>
             <div className="flex items-baseline gap-3">
-              <Mono className="text-[30px] leading-none font-medium tracking-[-0.03em]">
-                {usd(last)}
-              </Mono>
+              <Explainable
+                label={`${token.symbol} price`}
+                value={`${usd(last)}, ${change === null ? "" : `${(change * 100).toFixed(1)}%`} over the ${RANGE_LABEL[range]}`}
+                context={`${token.name} price on the Trade page of a beginner crypto app`}
+              >
+                <Mono className="text-[30px] leading-none font-medium tracking-[-0.03em]">
+                  {usd(last)}
+                </Mono>
+              </Explainable>
               <PriceChange ratio={change} className="text-sm" />
               <span className="text-xs text-faint">{RANGE_LABEL[range]}</span>
             </div>
           </div>
         </div>
         <div className="grid grid-cols-4 gap-7">
-          <StatItem label="Market cap" value={compactUsd(stats?.market_cap)} />
-          <StatItem label="24h volume" value={compactUsd(stats?.volume_24h)} />
-          <StatItem label="24h low" value={usd(stats?.low_24h)} />
-          <StatItem label="24h high" value={usd(stats?.high_24h)} />
+          <StatItem
+            symbol={token.symbol}
+            label="Market cap"
+            value={compactUsd(stats?.market_cap)}
+          />
+          <StatItem
+            symbol={token.symbol}
+            label="24h volume"
+            value={compactUsd(stats?.volume_24h)}
+          />
+          <StatItem
+            symbol={token.symbol}
+            label="24h low"
+            value={usd(stats?.low_24h)}
+          />
+          <StatItem
+            symbol={token.symbol}
+            label="24h high"
+            value={usd(stats?.high_24h)}
+          />
         </div>
       </div>
 
@@ -291,7 +355,7 @@ export function MarketPanel({ token }: { token: AssetRow }) {
           </div>
         )}
         {market.error && !points.length ? (
-          <p className="m-0 flex h-[340px] items-center justify-center text-sm text-muted">
+          <p className="m-0 flex h-[220px] items-center justify-center text-sm text-muted">
             Chart unavailable right now.
           </p>
         ) : (

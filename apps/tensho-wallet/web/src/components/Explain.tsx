@@ -21,9 +21,15 @@ export function Explainable({
   const { beginner } = useBeginnerMode();
   const [open, setOpen] = useState(false);
   // Freeze what was tapped, so live price ticks don't re-ask the agent while the popover is open.
-  const [asked, setAsked] = useState<{ label: string; value: string; context: string } | null>(null);
+  const [asked, setAsked] = useState<{
+    label: string;
+    value: string;
+    context: string;
+  } | null>(null);
   const root = useRef<HTMLSpanElement>(null);
   const popoverId = useId();
+  // Fixed to the viewport so panels that scroll inside themselves can't clip it.
+  const [at, setAt] = useState<{ top: number; left: number } | null>(null);
 
   const explain = useQuery({
     queryKey: ["explain", asked],
@@ -52,7 +58,6 @@ export function Explainable({
 
   if (!beginner) return <>{children}</>;
 
-
   return (
     <span ref={root} className="relative inline-flex">
       <button
@@ -61,21 +66,33 @@ export function Explainable({
         aria-controls={popoverId}
         aria-label={`Explain ${label}`}
         onClick={() => {
-          if (!open) setAsked({ label, value, context });
+          if (!open) {
+            setAsked({ label, value, context });
+            const r = root.current!.getBoundingClientRect();
+            const width = 280;
+            const left = align === "right" ? r.right - width : r.left;
+            const below = r.bottom + 8;
+            setAt({
+              top:
+                below + 170 > window.innerHeight
+                  ? Math.max(8, r.top - 178)
+                  : below,
+              left: Math.min(Math.max(8, left), window.innerWidth - width - 8),
+            });
+          }
           setOpen((o) => !o);
         }}
         className="cursor-help border-none bg-transparent p-0 text-left text-inherit decoration-faint decoration-dotted underline-offset-4 hover:underline"
       >
         {children}
       </button>
-      {open && (
+      {open && at && (
         <span
           id={popoverId}
           role="dialog"
           aria-label={`${label} explained`}
-          className={`absolute top-full z-30 mt-2 flex w-[260px] flex-col gap-1.5 rounded-[12px] border border-edge bg-panel p-3.5 text-left shadow-[0_18px_40px_-12px_rgba(0,0,0,0.8)] ${
-            align === "right" ? "right-0" : "left-0"
-          }`}
+          style={{ top: at.top, left: at.left }}
+          className="fixed z-50 flex w-[280px] flex-col gap-1.5 rounded-[12px] border border-edge bg-panel p-3.5 text-left shadow-[0_18px_40px_-12px_rgba(0,0,0,0.8)]"
         >
           <span className="flex items-center gap-1.5 text-[10px] font-bold tracking-[0.14em] text-muted uppercase">
             <Sparkles aria-hidden className="size-3" />

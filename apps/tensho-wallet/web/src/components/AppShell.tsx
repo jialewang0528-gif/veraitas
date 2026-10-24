@@ -102,8 +102,8 @@ export function AppShell() {
           <CustomerCard email={me.data.email} />
         </div>
       </aside>
-      <main className="flex min-w-0 flex-1 flex-col overflow-y-auto">
-        <div className="page-enter flex flex-1 flex-col gap-5 px-8 py-6">
+      <main className="flex min-w-0 flex-1 flex-col overflow-hidden">
+        <div className="page-enter flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-6 py-4">
           <Outlet />
         </div>
       </main>

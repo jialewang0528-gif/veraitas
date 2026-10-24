@@ -10,7 +10,7 @@ import { Explainable } from "./Explain.tsx";
 import { Card, Label, Mono } from "./ui.tsx";
 
 const STREAM = "wss://api.truemarkets.co/v1/defi/market";
-const ROWS = 8;
+const ROWS = 7;
 
 interface Book {
   bids: Level[];
@@ -71,10 +71,12 @@ function Side({
   levels,
   tone,
   max,
+  symbol,
 }: {
   levels: Level[];
   tone: "up" | "down";
   max: number;
+  symbol: string;
 }) {
   const totals = cumulative(levels);
   return (
@@ -89,11 +91,21 @@ function Side({
             className={`absolute inset-y-0 ${tone === "up" ? "left-0 bg-up/10" : "right-0 bg-down/10"}`}
             style={{ width: `${Math.min(100, (totals[i]! / max) * 100)}%` }}
           />
-          <Mono
-            className={`relative ${tone === "up" ? "text-up" : "text-down"}`}
-          >
-            {usd(level.px)}
-          </Mono>
+          <span className="relative">
+            <Explainable
+              label={
+                tone === "up"
+                  ? "Buy orders at this price"
+                  : "Sell orders at this price"
+              }
+              value={`${size(level.sz)} ${symbol} waiting at ${usd(level.px)}; ${size(String(totals[i]))} ${symbol} in total from the best price to here`}
+              context={`One ${tone === "up" ? "bid" : "ask"} level of the live ${symbol} order book in a beginner crypto app`}
+            >
+              <Mono className={tone === "up" ? "text-up" : "text-down"}>
+                {usd(level.px)}
+              </Mono>
+            </Explainable>
+          </span>
           <Mono className="relative text-right text-muted">
             {size(level.sz)}
           </Mono>
@@ -136,15 +148,15 @@ export function OrderBook({ symbol }: { symbol: string }) {
 
   const ctx = `Live order book for ${symbol} on the Trade page of a beginner crypto app`;
   return (
-    <Card className="flex flex-col gap-4 p-5">
+    <Card className="flex h-full flex-col gap-3 overflow-y-auto p-4">
       <div className="flex items-center justify-between">
-        <h2 className="m-0 font-display text-[18px] leading-none font-bold">
+        <h2 className="m-0 font-display text-[16px] leading-none font-bold whitespace-nowrap">
           Order book
         </h2>
         <span className="flex items-center gap-2 text-[11px] text-faint">
           {state === "live" && <span className="live-dot" />}
           {state === "live"
-            ? "Hyperliquid depth via True Markets"
+            ? "Live · Hyperliquid"
             : state === "connecting"
               ? "Connecting"
               : `No public book for ${symbol}`}
@@ -213,7 +225,12 @@ export function OrderBook({ symbol }: { symbol: string }) {
             <span className="text-right">Size</span>
             <span className="text-right">Total</span>
           </div>
-          <Side levels={[...asks].reverse()} tone="down" max={max} />
+          <Side
+            levels={[...asks].reverse()}
+            tone="down"
+            max={max}
+            symbol={symbol}
+          />
           <div className="my-1 flex items-center justify-between border-y border-line px-2 py-1.5 text-[12px]">
             <Explainable
               label="Spread"
@@ -230,7 +247,7 @@ export function OrderBook({ symbol }: { symbol: string }) {
               {s ? `${usd(s.spread)} · ${s.spreadBps.toFixed(2)} bps` : "—"}
             </Mono>
           </div>
-          <Side levels={bids} tone="up" max={max} />
+          <Side levels={bids} tone="up" max={max} symbol={symbol} />
           {s && (
             <div className="mt-3 flex flex-col gap-1">
               <div className="flex h-1.5 overflow-hidden rounded-full bg-down/40">

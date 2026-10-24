@@ -244,7 +244,7 @@ export function AgentPanel({ tokens }: { tokens: AssetRow[] }) {
   const unavailable = error instanceof ApiError && error.status === 503;
 
   return (
-    <Card className="flex h-[560px] flex-col overflow-hidden">
+    <Card className="flex h-full min-h-0 flex-col overflow-hidden">
       <header className="flex items-center justify-between border-b border-line px-5 py-3.5">
         <div className="flex items-center gap-2.5">
           <span className="flex size-7 items-center justify-center rounded-full bg-accent text-ink">

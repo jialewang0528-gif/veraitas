@@ -389,14 +389,17 @@ function Ticket({
       )}
 
       {autoSellNote && <p className="m-0 text-xs text-muted">{autoSellNote}</p>}
-      {beginner && status === "complete" && settlement.data && receiptClosed !== settlement.data.order_id && (
-        <TradeReceipt
-          order={settlement.data}
-          symbol={token.symbol}
-          chartPrice={token.price === null ? null : Number(token.price)}
-          onClose={() => setReceiptClosed(settlement.data?.order_id ?? null)}
-        />
-      )}
+      {beginner &&
+        status === "complete" &&
+        settlement.data &&
+        receiptClosed !== settlement.data.order_id && (
+          <TradeReceipt
+            order={settlement.data}
+            symbol={token.symbol}
+            chartPrice={token.price === null ? null : Number(token.price)}
+            onClose={() => setReceiptClosed(settlement.data?.order_id ?? null)}
+          />
+        )}
       {flow ? (
         <SettlementNotice
           state={flow}
@@ -488,17 +491,31 @@ export function Trade() {
       {!token ? (
         <Spinner />
       ) : (
-        <div className="grid flex-1 grid-cols-[minmax(0,1fr)_380px] items-start gap-5">
-          <div className="flex min-w-0 flex-col gap-5">
-            <MarketPanel token={token} />
-            {beginner && <AgentPanel tokens={tokens} />}
-            <TokenList
+        <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)_300px_360px] gap-3">
+          <div className="flex min-h-0 min-w-0 flex-col gap-3">
+            <MarketPanel
+              token={token}
               tokens={tokens}
-              selected={token.symbol}
               onSelect={(asset) => select({ asset })}
             />
+            <div className="min-h-0 flex-1">
+              {beginner ? (
+                <AgentPanel tokens={tokens} />
+              ) : (
+                <div className="h-full overflow-y-auto rounded-[12px]">
+                  <TokenList
+                    tokens={tokens}
+                    selected={token.symbol}
+                    onSelect={(asset) => select({ asset })}
+                  />
+                </div>
+              )}
+            </div>
           </div>
-          <div className="flex flex-col gap-5">
+          <div className="min-h-0">
+            <OrderBook symbol={token.symbol} />
+          </div>
+          <div className="min-h-0 overflow-y-auto rounded-[12px]">
             <Ticket
               key={`${token.asset_id}:${side}`}
               token={token}
@@ -507,25 +524,6 @@ export function Trade() {
               position={position}
               cash={cash}
             />
-            <OrderBook symbol={token.symbol} />
-            <Card className="flex flex-col gap-4 p-[22px]">
-              <h2 className="m-0 font-display text-[18px] leading-none font-bold">
-                Your {token.symbol}
-              </h2>
-              <Stat
-                label="Balance"
-                value={tokenAmount(position?.total ?? "0", token.symbol)}
-                detail={usd(position?.value ?? (position ? null : 0))}
-              />
-              <div className="flex flex-col gap-1">
-                <Label>Cash available</Label>
-                <Mono className="text-[22px]">{usd(cash?.available ?? 0)}</Mono>
-              </div>
-              <p className="m-0 mt-6 text-[13px] leading-relaxed text-faint">
-                Prices move between quote and fill. If a trade can't land within
-                your slippage, it's cancelled and nothing moves.
-              </p>
-            </Card>
           </div>
         </div>
       )}

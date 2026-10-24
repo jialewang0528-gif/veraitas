@@ -60,7 +60,14 @@ function Row({
         <span className="text-[13px] text-muted">{label}</span>
       </Explainable>
       <span className="flex flex-col items-end">
-        <Mono className={`text-[14px] ${tone}`}>{value}</Mono>
+        <Explainable
+          label={label}
+          value={note ? `${value} (${note})` : value}
+          context={context}
+          align="right"
+        >
+          <Mono className={`text-[14px] ${tone}`}>{value}</Mono>
+        </Explainable>
         {note && <span className="text-[11px] text-faint">{note}</span>}
       </span>
     </div>
