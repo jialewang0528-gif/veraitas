@@ -140,3 +140,22 @@ export interface Page<T> {
   data: T[];
   pagination: { next_cursor: string | null; limit: number };
 }
+
+export type ExitStatus = "watching" | "selling" | "sold" | "failed" | "canceled";
+
+export interface ExitPlan {
+  id: string;
+  asset_id: string;
+  symbol: string;
+  qty: string;
+  fill_price: string;
+  target_pct: 5 | 10 | 20;
+  target_price: string;
+  status: ExitStatus;
+  buy_order_id: string;
+  sell_order_id: string | null;
+  sold_price: string | null;
+  failure: string | null;
+  created_at: string;
+  updated_at: string;
+}

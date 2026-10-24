@@ -34,7 +34,7 @@ import type { AssetRow, OrderDetail, PreparedOrder } from "../types.ts";
 type Side = "buy" | "sell";
 
 const ORDER_TERMINAL = ["complete", "failed", "canceled"] as const;
-const BUY_CHIPS = ["10", "25", "50"];
+const BUY_CHIPS = ["1", "2", "5"];
 const SELL_CHIPS = [25, 50, 75];
 
 function TokenList({
