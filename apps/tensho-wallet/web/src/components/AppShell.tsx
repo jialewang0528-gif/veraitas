@@ -5,7 +5,6 @@ import { Navigate, NavLink, Outlet, useNavigate } from "react-router";
 import { api, ApiError, useMe } from "../api.ts";
 import { BeginnerToggle, useBeginnerMode } from "../beginner.tsx";
 import type { Profile } from "../types.ts";
-import { TickerTape } from "./TickerTape.tsx";
 import { Banner, Button, Logo, Spinner, Wordmark } from "./ui.tsx";
 
 // Beginner screens only show in Beginner Mode; with it off this is a plain trading app.
@@ -104,11 +103,6 @@ export function AppShell() {
         </div>
       </aside>
       <main className="flex min-w-0 flex-1 flex-col overflow-y-auto">
-        {!beginner && (
-          <div className="sticky top-0 z-20">
-            <TickerTape />
-          </div>
-        )}
         <div className="page-enter flex flex-1 flex-col gap-5 px-8 py-6">
           <Outlet />
         </div>
