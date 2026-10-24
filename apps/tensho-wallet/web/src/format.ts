@@ -36,6 +36,12 @@ export function signedUsd(value: number | string): string {
   return `${n > 0 ? "+" : n < 0 ? "−" : ""}${usd(Math.abs(n))}`;
 }
 
+// Profit and loss in whole cents; sub-cent precision only adds noise.
+export function signedCents(value: number): string {
+  const cents = Math.round(value * 100) / 100;
+  return `${cents < 0 ? "-" : cents > 0 ? "+" : ""}$${Math.abs(cents).toFixed(2)}`;
+}
+
 export function tokenAmount(qty: string | number, symbol?: string): string {
   const n = Number(qty);
   const text = Number.isFinite(n) ? n.toLocaleString("en-US", { maximumFractionDigits: n !== 0 && Math.abs(n) < 1 ? 6 : 4 }) : String(qty);
