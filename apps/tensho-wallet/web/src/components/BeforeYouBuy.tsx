@@ -19,7 +19,8 @@ function useEstimate(
     queryKey: ["estimate", path, body],
     queryFn: () => api<Estimate>(path, { method: "POST", body: body! }),
     enabled: body !== null,
-    refetchInterval: 10_000,
+    // Each estimate creates an unsigned order upstream, so read it once per amount instead of polling.
+    staleTime: 30_000,
     retry: false,
   });
 }
@@ -70,12 +71,14 @@ export function HoldButton({
   label,
   disabled,
   onComplete,
+  resetKey = "",
 }: {
   label: string;
   disabled: boolean;
   onComplete: () => void;
+  resetKey?: string;
 }) {
-  const hold = useHold(onComplete, disabled);
+  const hold = useHold(onComplete, disabled, resetKey);
   function onKeyDown(e: KeyboardEvent) {
     if ((e.key === " " || e.key === "Enter") && !e.repeat) {
       e.preventDefault();
@@ -90,7 +93,9 @@ export function HoldButton({
       type="button"
       disabled={disabled}
       aria-label={`${label}. Press and hold to confirm.`}
-      onPointerDown={hold.start}
+      onPointerDown={(e) => e.button === 0 && hold.start()}
+      onBlur={hold.stop}
+      onContextMenu={(e) => e.preventDefault()}
       onPointerUp={hold.stop}
       onPointerLeave={hold.stop}
       onPointerCancel={hold.stop}
@@ -107,7 +112,7 @@ export function HoldButton({
         {hold.progress > 0 ? "Keep holding" : label}
       </span>
       <span className="sr-only" aria-live="polite">
-        {hold.progress > 0 ? `${Math.round(hold.progress * 100)} percent` : ""}
+        {hold.progress > 0 ? "Holding" : ""}
       </span>
     </button>
   );
@@ -243,6 +248,7 @@ export function BeforeYouBuy({
         label={`Hold to buy ${amountLabel} of ${token.symbol}`}
         disabled={!canConfirm}
         onComplete={onConfirm}
+        resetKey={`${token.asset_id}:${spend}:${live?.qty_out ?? ""}`}
       />
     </section>
   );
